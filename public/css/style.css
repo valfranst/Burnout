@@ -164,3 +164,31 @@ th { font-weight: 600; color: var(--muted); font-size: .75rem; text-transform: u
 .mt-2 { margin-top: 1rem; }
 .mb-2 { margin-bottom: 1rem; }
 .hidden { display: none !important; }
+
+/* ---------- Info Icon ---------- */
+.info-icon {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 20px; height: 20px; margin-left: 6px;
+  border: 1px solid var(--border); border-radius: 50%;
+  font-size: 12px; font-weight: 700; color: var(--primary);
+  background: #fff; cursor: pointer; transition: all .15s;
+}
+.info-icon:hover { background: #eef2ff; border-color: var(--primary); }
+
+/* ---------- Modal ---------- */
+.modal { position: fixed; inset: 0; display: flex; align-items: center; justify-content: center; z-index: 200; }
+.modal .modal-overlay { position: absolute; inset: 0; background: rgba(15, 23, 42, .35); }
+.modal .modal-dialog {
+  position: relative;
+  background: var(--card);
+  border-radius: var(--radius);
+  padding: 1.25rem 1.5rem;
+  box-shadow: var(--shadow);
+  max-width: 420px;
+  width: calc(100% - 2rem);
+  border: 1px solid var(--border);
+  z-index: 1;
+}
+.modal .modal-dialog h3 { margin-bottom: .5rem; }
+.modal .modal-dialog p { color: var(--muted); font-size: .9rem; margin-bottom: .75rem; }
+.modal .modal-dialog .modal-actions { display: flex; justify-content: flex-end; margin-top: .5rem; }
