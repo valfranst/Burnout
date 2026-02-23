@@ -25,7 +25,9 @@ CREATE TABLE burnout (
     fatigue_score REAL,
     burnout_score REAL,
     burnout_risk burnout_risk_level,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     embedding vector(12)
+
 );
 
 -- Função da Trigger quando inserir ou atualizar um registro, para calcular o embedding quando for null

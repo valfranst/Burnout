@@ -2,11 +2,13 @@
 
 require('dotenv').config();
 
+const path = require('path');
 const express = require('express');
 const session = require('express-session');
 const pgSession = require('connect-pg-simple')(session);
 const bcrypt = require('bcrypt');
 const rateLimit = require('express-rate-limit');
+const cookieParser = require('cookie-parser');
 const { doubleCsrf } = require('csrf-csrf');
 const pool = require('./db');
 const passport = require('./auth');
@@ -40,8 +42,12 @@ const apiLimiter = rateLimit({
 // ------------------------------------------------------------
 // Middlewares
 // ------------------------------------------------------------
+// Servir arquivos estáticos da pasta public/
+app.use(express.static(path.join(__dirname, '..', 'public')));
+
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+app.use(cookieParser());
 
 app.use(
   session({
@@ -74,12 +80,14 @@ app.use(passport.session());
 // ------------------------------------------------------------
 // CSRF Protection (double-submit cookie pattern)
 // ------------------------------------------------------------
-const { generateToken, doubleCsrfProtection } = doubleCsrf({
+const isProduction = process.env.NODE_ENV === 'production';
+const { generateCsrfToken, doubleCsrfProtection } = doubleCsrf({
   getSecret: () => process.env.SESSION_SECRET || 'dev-secret-change-me',
-  cookieName: '__Host-psifi.x-csrf-token',
+  getSessionIdentifier: (req) => req.session?.id || '',
+  cookieName: isProduction ? '__Host-psifi.x-csrf-token' : 'x-csrf-token',
   cookieOptions: {
-    secure: process.env.NODE_ENV === 'production',
-    sameSite: 'strict',
+    secure: isProduction,
+    sameSite: 'lax',
   },
   errorConfig: {
     statusCode: 403,
@@ -88,8 +96,8 @@ const { generateToken, doubleCsrfProtection } = doubleCsrf({
 });
 
 // Rota para obter token CSRF (necessário antes de chamadas POST/PUT/DELETE)
-app.get('/csrf-token', (_req, res) => {
-  res.json({ csrfToken: generateToken(_req, res) });
+app.get('/csrf-token', (req, res) => {
+  res.json({ csrfToken: generateCsrfToken(req, res) });
 });
 
 // ------------------------------------------------------------
@@ -102,8 +110,8 @@ app.get('/auth/google', authLimiter, passport.authenticate('google', { scope: ['
 app.get(
   '/auth/google/callback',
   authLimiter,
-  passport.authenticate('google', { failureRedirect: '/auth/login' }),
-  (_req, res) => res.redirect('/dashboard')
+  passport.authenticate('google', { failureRedirect: '/login.html' }),
+  (_req, res) => res.redirect('/dashboard.html')
 );
 
 // Email + Senha — Cadastro
@@ -150,12 +158,22 @@ app.post('/auth/logout', doubleCsrfProtection, (req, res, next) => {
   });
 });
 
+// Usuário autenticado
+app.get('/auth/me', (req, res) => {
+  if (!req.isAuthenticated()) return res.status(401).json({ error: 'Não autenticado.' });
+  const { id, name, email, picture_url } = req.user;
+  return res.json({ id, name, email, picture_url });
+});
+
 // ------------------------------------------------------------
 // Application Routes
 // ------------------------------------------------------------
 app.use('/burnout-logs', apiLimiter, doubleCsrfProtection, burnoutRouter);
 app.use('/dashboard', apiLimiter, dashboardRouter);
 app.use('/report', apiLimiter, publicRouter);
+
+// Silencia probe do Chrome DevTools / extensões
+app.get('/.well-known/appspecific/com.chrome.devtools.json', (_req, res) => res.json({}));
 
 // Healthcheck
 app.get('/health', (_req, res) => res.json({ status: 'ok', timestamp: new Date().toISOString() }));

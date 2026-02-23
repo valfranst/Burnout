@@ -26,12 +26,12 @@ router.get('/', requireAuth, async (req, res) => {
   try {
     // Últimos 90 dias de análises
     const { rows: records } = await pool.query(
-      `SELECT data_registro, burnout_score, burnout_risk, archetype,
+      `SELECT created_at, burnout_score, burnout_risk, archetype,
               fatigue_score, breaks_taken, work_hours, sleep_hours
        FROM burnout
        WHERE user_id = $1
-         AND data_registro >= CURRENT_DATE - INTERVAL '90 days'
-       ORDER BY data_registro ASC`,
+         AND created_at >= CURRENT_DATE - INTERVAL '90 days'
+       ORDER BY created_at ASC`,
       [userId]
     );
 
@@ -66,7 +66,7 @@ router.get('/', requireAuth, async (req, res) => {
     let similarRecords = [];
     if (lastRecord) {
       const { rows: similar } = await pool.query(
-        `SELECT b.id, b.data_registro, b.burnout_score, b.burnout_risk, b.archetype,
+        `SELECT b.id, b.created_at, b.burnout_score, b.burnout_risk, b.archetype,
                 b.embedding <-> (
                   SELECT embedding FROM burnout WHERE user_id = $1 ORDER BY created_at DESC LIMIT 1
                 ) AS distance

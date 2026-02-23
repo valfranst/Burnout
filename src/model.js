@@ -153,7 +153,7 @@ function analyzeLog(log) {
 
 /**
  * Análise temporal: tendência de burnout nos últimos 90 dias.
- * Recebe array de { data_registro, burnout_score }.
+ * Recebe array de { created_at, burnout_score }.
  * Retorna: médias semanais, tendência (improving/stable/worsening) e delta.
  */
 function analyzeTemporalTrend(records) {
@@ -161,12 +161,12 @@ function analyzeTemporalTrend(records) {
     return { weeklyAverages: [], trend: 'stable', delta: 0 };
   }
 
-  const sorted = [...records].sort((a, b) => new Date(a.data_registro) - new Date(b.data_registro));
+  const sorted = [...records].sort((a, b) => new Date(a.created_at) - new Date(b.created_at));
 
   // Agrupa por semana
   const weeks = {};
   for (const r of sorted) {
-    const d = new Date(r.data_registro);
+    const d = new Date(r.created_at);
     const weekStart = new Date(d);
     weekStart.setDate(d.getDate() - d.getDay());
     const key = weekStart.toISOString().slice(0, 10);
@@ -198,7 +198,7 @@ function analyzeTemporalTrend(records) {
 
 /**
  * Detecção de anomalias: identifica picos de fadiga acima de 2 desvios padrão.
- * Recebe array de { data_registro, fatigue_score }.
+ * Recebe array de { created_at, fatigue_score }.
  */
 function detectAnomalies(records) {
   if (!records || records.length < 3) return [];
@@ -211,7 +211,7 @@ function detectAnomalies(records) {
   return records
     .filter((r) => r.fatigue_score > threshold)
     .map((r) => ({
-      data_registro: r.data_registro,
+      created_at: r.created_at,
       fatigue_score: r.fatigue_score,
       zscore: parseFloat(((r.fatigue_score - mean) / std).toFixed(2)),
     }));
@@ -220,27 +220,27 @@ function detectAnomalies(records) {
 /**
  * Análise de causalidade de intervenções:
  * compara a pontuação média de burnout antes e depois de dias com mais pausas.
- * Recebe array de { data_registro, burnout_score, breaks_taken }.
+ * Recebe array de { created_at, burnout_score, breaks_taken }.
  */
 function analyzeInterventions(records) {
   if (!records || records.length < 4) return null;
 
-  const sorted = [...records].sort((a, b) => new Date(a.data_registro) - new Date(b.data_registro));
+  const sorted = [...records].sort((a, b) => new Date(a.created_at) - new Date(b.created_at));
   const avgBreaks = sorted.reduce((s, r) => s + r.breaks_taken, 0) / sorted.length;
 
   const highBreakDays = new Set(
-    sorted.filter((r) => r.breaks_taken > avgBreaks).map((r) => r.data_registro.toString())
+    sorted.filter((r) => r.breaks_taken > avgBreaks).map((r) => r.created_at.toString())
   );
 
   const scoresAfterHighBreak = [];
   for (let i = 0; i < sorted.length - 1; i++) {
-    if (highBreakDays.has(sorted[i].data_registro.toString())) {
+    if (highBreakDays.has(sorted[i].created_at.toString())) {
       scoresAfterHighBreak.push(sorted[i + 1].burnout_score);
     }
   }
 
   const scoresAfterLowBreak = sorted
-    .filter((r) => !highBreakDays.has(r.data_registro.toString()))
+    .filter((r) => !highBreakDays.has(r.created_at.toString()))
     .map((r) => r.burnout_score);
 
   if (scoresAfterHighBreak.length === 0 || scoresAfterLowBreak.length === 0) return null;

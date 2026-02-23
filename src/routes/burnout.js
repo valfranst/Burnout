@@ -52,13 +52,12 @@ router.post('/', requireAuth, async (req, res) => {
       `INSERT INTO burnout_logs
          (user_id, day_type, work_hours, screen_time_hours, meetings_count, app_switches,
           after_hours_work, sleep_hours, isolation_index, fatigue_score, breaks_taken,
-          data_registro, is_processed)
-       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,FALSE)
+          is_processed)
+       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,FALSE)
        RETURNING id`,
       [
         userId, day_type, work_hours, screen_time_hours, meetings_count, app_switches,
         after_hours_work, sleep_hours, isolation_index, fatigue_score, breaks_taken,
-        registrationDate,
       ]
     );
     const logId = logResult.rows[0].id;
@@ -75,13 +74,13 @@ router.post('/', requireAuth, async (req, res) => {
     // O embedding é calculado automaticamente pela trigger do banco
     const burnoutResult = await client.query(
       `INSERT INTO burnout
-         (user_id, log_id, data_registro, day_type, work_hours, screen_time_hours,
+         (user_id, log_id, day_type, work_hours, screen_time_hours,
           meetings_count, breaks_taken, after_hours_work, app_switches, sleep_hours,
           task_completion, isolation_index, fatigue_score, burnout_score, burnout_risk, archetype)
-       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17)
+       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16)
        RETURNING id`,
       [
-        userId, logId, registrationDate,
+        userId, logId,
         day_type, work_hours, screen_time_hours, meetings_count, breaks_taken,
         after_hours_work, app_switches, sleep_hours, task_completion, isolation_index,
         fatigue_score, burnoutScore, burnoutRisk, archetype,

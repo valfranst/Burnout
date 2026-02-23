@@ -1,0 +1,26 @@
+                                            Table "public.burnout"
+      Column       |            Type             | Collation | Nullable |               Default               
+-------------------+-----------------------------+-----------+----------+-------------------------------------
+ id                | integer                     |           | not null | nextval('burnout_id_seq'::regclass)
+ user_id           | integer                     |           |          | 
+ day_type          | text                        |           |          | 
+ work_hours        | real                        |           |          | 
+ screen_time_hours | real                        |           |          | 
+ meetings_count    | smallint                    |           |          | 
+ breaks_taken      | smallint                    |           |          | 
+ after_hours_work  | boolean                     |           |          | 
+ app_switches      | integer                     |           |          | 
+ sleep_hours       | real                        |           |          | 
+ task_completion   | real                        |           |          | 
+ isolation_index   | smallint                    |           |          | 
+ fatigue_score     | real                        |           |          | 
+ burnout_score     | real                        |           |          | 
+ burnout_risk      | burnout_risk_level          |           |          | 
+ created_at        | timestamp without time zone |           |          | CURRENT_TIMESTAMP
+ embedding         | vector(12)                  |           |          | 
+Indexes:
+    "burnout_pkey" PRIMARY KEY, btree (id)
+    "burnout_embedding_idx" hnsw (embedding vector_l2_ops)
+Triggers:
+    trg_update_burnout_embedding BEFORE INSERT OR UPDATE ON burnout FOR EACH ROW EXECUTE FUNCTION fn_generate_burnout_embedding()
+

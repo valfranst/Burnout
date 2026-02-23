@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Relatório Público — Burnout Analysis</title>
+  <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+  <nav class="navbar">
+    <div class="container">
+      <a href="/" class="navbar-brand">🔥 Burnout Analysis</a>
+      <!-- Links para visitante -->
+      <div id="nav-guest" class="navbar-links">
+        <a href="/report.html">Relatório Público</a>
+        <a href="/login.html" class="btn btn-outline">Entrar</a>
+        <a href="/register.html" class="btn btn-primary">Cadastrar</a>
+      </div>
+      <!-- Links para usuário logado -->
+      <div id="nav-user" class="navbar-links hidden">
+        <a href="/dashboard.html">Dashboard</a>
+        <a href="/log.html">Novo Registro</a>
+        <a href="/report.html">Relatório</a>
+        <div class="user-avatar-wrapper">
+          <img id="nav-user-avatar" class="user-avatar" src="" alt="avatar">
+          <div class="user-card">
+            <img id="card-avatar" class="user-card-avatar" src="" alt="avatar">
+            <strong id="card-name"></strong>
+            <span id="card-email" class="text-muted"></span>
+            <button id="btn-logout" class="btn btn-outline" style="font-size:.8rem;width:100%;margin-top:.5rem;">Sair</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </nav>
+
+  <div class="container section">
+    <h1 class="section-title">Relatório Público</h1>
+    <p class="text-muted mb-2">Dados agregados e anônimos de todos os participantes.</p>
+    <div id="alert-box"></div>
+    <div id="loading" class="text-center text-muted" style="padding:3rem;">Carregando dados...</div>
+
+    <!-- Overall -->
+    <div id="overall" class="stats-grid hidden">
+      <div class="card stat-card">
+        <div class="stat-value" id="o-users">—</div>
+        <div class="stat-label">Usuários</div>
+      </div>
+      <div class="card stat-card">
+        <div class="stat-value" id="o-records">—</div>
+        <div class="stat-label">Registros</div>
+      </div>
+      <div class="card stat-card">
+        <div class="stat-value" id="o-avg">—</div>
+        <div class="stat-label">Score Médio</div>
+      </div>
+      <div class="card stat-card">
+        <div class="stat-value" id="o-fatigue">—</div>
+        <div class="stat-label">Fadiga Média</div>
+      </div>
+    </div>
+
+    <!-- Risk distribution -->
+    <div id="risk-section" class="card hidden mb-2">
+      <h3 class="section-title">Distribuição de Risco</h3>
+      <div class="table-wrapper">
+        <table id="risk-table">
+          <thead><tr><th>Risco</th><th>Total</th><th>%</th></tr></thead>
+          <tbody></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Archetypes -->
+    <div id="arch-section" class="card hidden mb-2">
+      <h3 class="section-title">Arquétipos Comportamentais</h3>
+      <div class="table-wrapper">
+        <table id="arch-table">
+          <thead><tr><th>Arquétipo</th><th>Total</th><th>%</th></tr></thead>
+          <tbody></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- By Day of Week -->
+    <div id="dow-section" class="card hidden mb-2">
+      <h3 class="section-title">Burnout por Dia da Semana</h3>
+      <div class="table-wrapper">
+        <table id="dow-table">
+          <thead><tr><th>Dia</th><th>Score Médio</th><th>Registros</th></tr></thead>
+          <tbody></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- 30-day trend -->
+    <div id="trend-section" class="card hidden mb-2">
+      <h3 class="section-title">Tendência — Últimos 30 Dias</h3>
+      <div class="table-wrapper">
+        <table id="trend-table">
+          <thead><tr><th>Data</th><th>Score Médio</th><th>Registros</th></tr></thead>
+          <tbody></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <footer class="footer">
+    <div class="container">
+      <p>Burnout Analysis System &copy; 2026 — Dados iniciais: <a href="https://www.kaggle.com/datasets/aryanmdev/remote-work-burnout-and-social-isolation-2026" target="_blank">Kaggle Dataset</a></p>
+    </div>
+  </footer>
+
+  <script src="/js/app.js"></script>
+  <script>
+    async function loadReport() {
+      const box = document.getElementById('alert-box');
+      try {
+        const data = await App.api('/report');
+        document.getElementById('loading').classList.add('hidden');
+
+        // Overall
+        const o = data.overall;
+        document.getElementById('o-users').textContent = o.total_users ?? 0;
+        document.getElementById('o-records').textContent = o.total_records ?? 0;
+        document.getElementById('o-avg').textContent = o.avg_burnout_score ?? '—';
+        document.getElementById('o-fatigue').textContent = o.avg_fatigue_score ?? '—';
+        document.getElementById('overall').classList.remove('hidden');
+
+        // Risk
+        if (data.riskDistribution?.length) {
+          const tbody = document.querySelector('#risk-table tbody');
+          data.riskDistribution.forEach(r => {
+            tbody.innerHTML += `<tr><td>${r.burnout_risk}</td><td>${r.total}</td><td>${r.percentage}%</td></tr>`;
+          });
+          document.getElementById('risk-section').classList.remove('hidden');
+        }
+
+        // Archetypes
+        if (data.archetypeDistribution?.length) {
+          const tbody = document.querySelector('#arch-table tbody');
+          data.archetypeDistribution.forEach(a => {
+            tbody.innerHTML += `<tr><td>${a.archetype}</td><td>${a.total}</td><td>${a.percentage}%</td></tr>`;
+          });
+          document.getElementById('arch-section').classList.remove('hidden');
+        }
+
+        // Day of week
+        if (data.burnoutByDayOfWeek?.length) {
+          const tbody = document.querySelector('#dow-table tbody');
+          data.burnoutByDayOfWeek.forEach(d => {
+            tbody.innerHTML += `<tr><td>${d.day_of_week.trim()}</td><td>${d.avg_burnout_score}</td><td>${d.total_records}</td></tr>`;
+          });
+          document.getElementById('dow-section').classList.remove('hidden');
+        }
+
+        // 30-day trend
+        if (data.trend30Days?.length) {
+          const tbody = document.querySelector('#trend-table tbody');
+          data.trend30Days.forEach(t => {
+            tbody.innerHTML += `<tr><td>${t.data_registro || t.created_at}</td><td>${t.avg_burnout_score}</td><td>${t.total_records}</td></tr>`;
+          });
+          document.getElementById('trend-section').classList.remove('hidden');
+        }
+      } catch (err) {
+        document.getElementById('loading').classList.add('hidden');
+        App.showAlert(box, err.error || 'Erro ao carregar relatório.');
+      }
+    }
+    loadReport();
+  </script>
+</body>
+</html>

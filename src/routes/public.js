@@ -13,8 +13,8 @@ router.get('/', async (_req, res) => {
   try {
     // Média de burnout por dia da semana
     const { rows: byDayOfWeek } = await pool.query(
-      `SELECT TO_CHAR(data_registro, 'Day') AS day_of_week,
-              EXTRACT(DOW FROM data_registro) AS dow_num,
+      `SELECT TO_CHAR(created_at, 'Day') AS day_of_week,
+              EXTRACT(DOW FROM created_at) AS dow_num,
               ROUND(AVG(burnout_score)::numeric, 2) AS avg_burnout_score,
               COUNT(*) AS total_records
        FROM burnout
@@ -55,13 +55,13 @@ router.get('/', async (_req, res) => {
 
     // Tendência dos últimos 30 dias (média diária global)
     const { rows: trend30d } = await pool.query(
-      `SELECT data_registro,
+      `SELECT created_at::date AS data_registro,
               ROUND(AVG(burnout_score)::numeric, 2) AS avg_burnout_score,
               COUNT(*) AS total_records
        FROM burnout
-       WHERE data_registro >= CURRENT_DATE - INTERVAL '30 days'
-       GROUP BY data_registro
-       ORDER BY data_registro ASC`
+       WHERE created_at >= CURRENT_DATE - INTERVAL '30 days'
+       GROUP BY created_at::date
+       ORDER BY created_at::date ASC`
     );
 
     return res.json({
