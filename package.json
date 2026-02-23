@@ -1,5 +1,27 @@
 {
+  "name": "burnout-analysis-system",
+  "version": "1.0.0",
+  "description": "Burnout no trabalho remoto - análise comportamental com IA",
+  "main": "src/index.js",
+  "scripts": {
+    "start": "node src/index.js",
+    "dev": "nodemon src/index.js"
+  },
   "dependencies": {
-    "@tensorflow/tfjs": "^4.22.0"
+    "@tensorflow/tfjs-node": "^4.22.0",
+    "bcrypt": "^5.1.1",
+    "connect-pg-simple": "^9.0.1",
+    "csrf-csrf": "^4.0.3",
+    "dotenv": "^16.4.5",
+    "express": "^4.19.2",
+    "express-rate-limit": "^8.2.1",
+    "express-session": "^1.18.0",
+    "passport": "^0.7.0",
+    "passport-google-oauth20": "^2.0.0",
+    "passport-local": "^1.0.0",
+    "pg": "^8.12.0"
+  },
+  "devDependencies": {
+    "nodemon": "^3.1.4"
   }
 }
