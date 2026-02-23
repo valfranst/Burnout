@@ -1,0 +1,17 @@
+node_modules/
+.env
+npm-debug.log*
+dist/
+build/
+coverage/
+*.log
+*.csv
+data/
+results/
+.DS_Store
+__pycache__/
+.ipynb_checkpoints/
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
