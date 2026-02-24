@@ -12,8 +12,11 @@ const router = express.Router();
 
 function requireAuth(req, res, next) {
   if (req.isAuthenticated()) return next();
-  if (req.accepts('html')) return res.redirect('/auth/login');
-  return res.status(401).json({ error: 'Autenticação necessária.' });
+  // Prefer JSON for API clients (fetch) and redirect only for browser navigations
+  if (req.accepts('json')) {
+    return res.status(401).json({ error: 'Autenticação necessária.' });
+  }
+  return res.redirect('/login.html');
 }
 
 /**
@@ -62,6 +65,22 @@ router.get('/', requireAuth, async (req, res) => {
     // Último registro
     const lastRecord = records[records.length - 1] || null;
 
+    // Últimos registros: usar burnout_logs (brutos) + inferências em burnout
+    const { rows: latestRecords } = await pool.query(
+      `SELECT bl.created_at,
+              b.burnout_score,
+              b.burnout_risk,
+              b.archetype,
+              bl.fatigue_score,
+              bl.work_hours
+       FROM burnout_logs bl
+       LEFT JOIN burnout b ON b.log_id = bl.id
+       WHERE bl.user_id = $1
+       ORDER BY bl.created_at DESC
+       LIMIT 10`,
+      [userId]
+    );
+
     // Similaridade vetorial: registros semelhantes no dataset geral
     let similarRecords = [];
     if (lastRecord) {
@@ -86,6 +105,7 @@ router.get('/', requireAuth, async (req, res) => {
         email: req.user.email,
         picture_url: req.user.picture_url,
       },
+      userId: req.user.id,
       summary: {
         totalRecords: total,
         avgBurnoutScore: avgScore,
@@ -93,6 +113,7 @@ router.get('/', requireAuth, async (req, res) => {
         dominantArchetype,
       },
       lastRecord,
+      latestRecords,
       temporal,
       anomalies,
       interventions,

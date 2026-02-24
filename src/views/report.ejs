@@ -1,0 +1,118 @@
+<div class="container section">
+  <h1 class="section-title">Relatório Público</h1>
+  <p class="text-muted mb-2">Dados agregados e anônimos de todos os participantes.</p>
+  <div id="alert-box"></div>
+  <div id="loading" class="text-center text-muted" style="padding:3rem;">Carregando dados...</div>
+
+  <div id="overall" class="stats-grid hidden">
+    <div class="card stat-card">
+      <div class="stat-value" id="o-users">—</div>
+      <div class="stat-label">Usuários</div>
+    </div>
+    <div class="card stat-card">
+      <div class="stat-value" id="o-records">—</div>
+      <div class="stat-label">Registros</div>
+    </div>
+    <div class="card stat-card">
+      <div class="stat-value" id="o-avg">—</div>
+      <div class="stat-label">Score Médio</div>
+    </div>
+    <div class="card stat-card">
+      <div class="stat-value" id="o-fatigue">—</div>
+      <div class="stat-label">Fadiga Média</div>
+    </div>
+  </div>
+
+  <div id="risk-section" class="card hidden mb-2">
+    <h3 class="section-title">Distribuição de Risco</h3>
+    <div class="table-wrapper">
+      <table id="risk-table">
+        <thead><tr><th>Risco</th><th>Total</th><th>%</th></tr></thead>
+        <tbody></tbody>
+      </table>
+    </div>
+  </div>
+
+  <div id="arch-section" class="card hidden mb-2">
+    <h3 class="section-title">Arquétipos Comportamentais</h3>
+    <div class="table-wrapper">
+      <table id="arch-table">
+        <thead><tr><th>Arquétipo</th><th>Total</th><th>%</th></tr></thead>
+        <tbody></tbody>
+      </table>
+    </div>
+  </div>
+
+  <div id="dow-section" class="card hidden mb-2">
+    <h3 class="section-title">Burnout por Dia da Semana</h3>
+    <div class="table-wrapper">
+      <table id="dow-table">
+        <thead><tr><th>Dia</th><th>Score Médio</th><th>Registros</th></tr></thead>
+        <tbody></tbody>
+      </table>
+    </div>
+  </div>
+
+  <div id="trend-section" class="card hidden mb-2">
+    <h3 class="section-title">Tendência — Últimos 30 Dias</h3>
+    <div class="table-wrapper">
+      <table id="trend-table">
+        <thead><tr><th>Data</th><th>Score Médio</th><th>Registros</th></tr></thead>
+        <tbody></tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<script>
+  async function loadReport() {
+    const box = document.getElementById('alert-box');
+    try {
+      const data = await App.api('/report');
+      document.getElementById('loading').classList.add('hidden');
+
+      const o = data.overall;
+      document.getElementById('o-users').textContent = o.total_users ?? 0;
+      document.getElementById('o-records').textContent = o.total_records ?? 0;
+      document.getElementById('o-avg').textContent = o.avg_burnout_score ?? '—';
+      document.getElementById('o-fatigue').textContent = o.avg_fatigue_score ?? '—';
+      document.getElementById('overall').classList.remove('hidden');
+
+      if (data.riskDistribution?.length) {
+        const tbody = document.querySelector('#risk-table tbody');
+        data.riskDistribution.forEach(r => {
+          tbody.innerHTML += `<tr><td>${r.burnout_risk}</td><td>${r.total}</td><td>${r.percentage}%</td></tr>`;
+        });
+        document.getElementById('risk-section').classList.remove('hidden');
+      }
+
+      if (data.archetypeDistribution?.length) {
+        const tbody = document.querySelector('#arch-table tbody');
+        data.archetypeDistribution.forEach(a => {
+          tbody.innerHTML += `<tr><td>${a.archetype}</td><td>${a.total}</td><td>${a.percentage}%</td></tr>`;
+        });
+        document.getElementById('arch-section').classList.remove('hidden');
+      }
+
+      if (data.burnoutByDayOfWeek?.length) {
+        const tbody = document.querySelector('#dow-table tbody');
+        data.burnoutByDayOfWeek.forEach(d => {
+          tbody.innerHTML += `<tr><td>${d.day_of_week.trim()}</td><td>${d.avg_burnout_score}</td><td>${d.total_records}</td></tr>`;
+        });
+        document.getElementById('dow-section').classList.remove('hidden');
+      }
+
+      if (data.trend30Days?.length) {
+        const tbody = document.querySelector('#trend-table tbody');
+        data.trend30Days.forEach(t => {
+          tbody.innerHTML += `<tr><td>${t.data_registro || t.created_at}</td><td>${t.avg_burnout_score}</td><td>${t.total_records}</td></tr>`;
+        });
+        document.getElementById('trend-section').classList.remove('hidden');
+      }
+    } catch (err) {
+      document.getElementById('loading').classList.add('hidden');
+      App.showAlert(box, err.error || 'Erro ao carregar relatório.');
+    }
+  }
+  loadReport();
+</script>

@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title><%= title || 'Burnout Monitoramento e Prevenção' %></title>
+  <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+  <button type="button" id="sidebar-toggle" class="sidebar-toggle floating" aria-label="Expandir ou recolher o menu" aria-pressed="false">
+    <span class="toggle-bar"></span>
+    <span class="toggle-bar"></span>
+    <span class="toggle-bar"></span>
+  </button>
+
+  <div class="layout">
+    <%- include('_navbar', { user, body }) %>
+    <script src="/js/app.js"></script>
+    <main class="main-content">
+      <%- include(body, { user }) %>
+    </main>
+  </div>
+  <%- include('_footer') %>
+  <script>
+    (function() {
+      const sidebar = document.getElementById('sidebar');
+      const sidebarToggle = document.getElementById('sidebar-toggle');
+
+      const applySidebarState = (collapsed) => {
+        if (!sidebar) return;
+        sidebar.classList.toggle('collapsed', collapsed);
+        if (sidebarToggle) sidebarToggle.setAttribute('aria-pressed', collapsed ? 'true' : 'false');
+        if (sidebarToggle) sidebarToggle.setAttribute('aria-label', collapsed ? 'Expandir o menu' : 'Recolher o menu');
+      };
+
+      const storedSidebarState = localStorage.getItem('sidebarCollapsed') === 'true';
+      applySidebarState(storedSidebarState);
+
+      if (sidebarToggle) {
+        sidebarToggle.addEventListener('click', () => {
+          const nextState = !sidebar.classList.contains('collapsed');
+          applySidebarState(nextState);
+          localStorage.setItem('sidebarCollapsed', String(nextState));
+        });
+      }
+    })();
+  </script>
+</body>
+</html>

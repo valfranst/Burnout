@@ -18,7 +18,11 @@ const App = (() => {
     if (!csrfToken && ['POST', 'PUT', 'DELETE', 'PATCH'].includes((opts.method || '').toUpperCase())) {
       await fetchCsrf();
     }
-    const headers = { 'Content-Type': 'application/json', ...(opts.headers || {}) };
+    const headers = {
+      'Content-Type': 'application/json',
+      'Accept': 'application/json',
+      ...(opts.headers || {}),
+    };
     if (csrfToken) headers['x-csrf-token'] = csrfToken;
     const res = await fetch(url, { ...opts, headers, credentials: 'same-origin' });
     const json = await res.json().catch(() => ({}));

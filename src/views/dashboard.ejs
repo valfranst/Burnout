@@ -1,0 +1,134 @@
+<div class="container section">
+  <h1 class="section-title">Meu Dashboard</h1>
+  <div id="alert-box"></div>
+  <div id="loading" class="text-center text-muted" style="padding:3rem;">Carregando dados...</div>
+
+  <div id="summary" class="stats-grid hidden">
+    <div class="card stat-card">
+      <div class="stat-value" id="s-total">—</div>
+      <div class="stat-label">Registros (90d)</div>
+    </div>
+    <div class="card stat-card">
+      <div class="stat-value" id="s-avg">—</div>
+      <div class="stat-label">Score Médio</div>
+    </div>
+    <div class="card stat-card">
+      <div class="stat-value" id="s-risk">—</div>
+      <div class="stat-label">Risco Dominante</div>
+    </div>
+    <div class="card stat-card">
+      <div class="stat-value" id="s-arch">—</div>
+      <div class="stat-label">Arquétipo</div>
+    </div>
+  </div>
+
+  <div id="temporal-section" class="card hidden mb-2">
+    <h3 class="section-title">Tendência Temporal</h3>
+    <p id="t-trend" class="text-muted"></p>
+    <div class="table-wrapper">
+      <table id="t-table">
+        <thead><tr><th>Semana</th><th>Score Médio</th></tr></thead>
+        <tbody></tbody>
+      </table>
+    </div>
+  </div>
+
+  <div id="anomalies-section" class="card hidden mb-2">
+    <h3 class="section-title">Anomalias Detectadas</h3>
+    <div class="table-wrapper">
+      <table id="a-table">
+        <thead><tr><th>Data</th><th>Fadiga</th><th>Z-Score</th></tr></thead>
+        <tbody></tbody>
+      </table>
+    </div>
+  </div>
+
+  <div id="interv-section" class="card hidden mb-2">
+    <h3 class="section-title">Eficácia de Pausas</h3>
+    <p id="i-text" class="text-muted"></p>
+  </div>
+
+  <div id="records-section" class="card hidden mb-2">
+    <h3 class="section-title">Últimos Registros</h3>
+    <div class="table-wrapper">
+      <table id="r-table">
+        <thead><tr><th>Data</th><th>Score</th><th>Risco</th><th>Arquétipo</th><th>Fadiga</th><th>Horas Trab.</th></tr></thead>
+        <tbody></tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<script>
+  const riskBadge = (r) => `<span class="badge badge-${r.toLowerCase()}">${r}</span>`;
+
+  async function loadDashboard() {
+    const box = document.getElementById('alert-box');
+    try {
+      const data = await App.api('/dashboard');
+      document.getElementById('loading').classList.add('hidden');
+
+      const s = data.summary;
+      document.getElementById('s-total').textContent = s.totalRecords;
+      document.getElementById('s-avg').textContent = s.avgBurnoutScore ?? '—';
+      const dominant = Object.entries(s.riskDistribution).sort((a,b) => b[1]-a[1])[0];
+      document.getElementById('s-risk').innerHTML = dominant ? riskBadge(dominant[0]) : '—';
+      document.getElementById('s-arch').textContent = s.dominantArchetype || '—';
+      document.getElementById('summary').classList.remove('hidden');
+
+      if (data.temporal && data.temporal.weeklyAverages.length) {
+        const sec = document.getElementById('temporal-section');
+        const trendMap = { improving: '📉 Melhorando', stable: '➡️ Estável', worsening: '📈 Piorando' };
+        document.getElementById('t-trend').textContent = `Tendência: ${trendMap[data.temporal.trend] || data.temporal.trend} (delta: ${data.temporal.delta})`;
+        const tbody = sec.querySelector('tbody');
+        data.temporal.weeklyAverages.forEach(w => {
+          tbody.innerHTML += `<tr><td>${w.week}</td><td>${w.avg}</td></tr>`;
+        });
+        sec.classList.remove('hidden');
+      }
+
+      if (data.anomalies && data.anomalies.length) {
+        const sec = document.getElementById('anomalies-section');
+        const tbody = sec.querySelector('tbody');
+        data.anomalies.forEach(a => {
+          tbody.innerHTML += `<tr><td>${a.created_at}</td><td>${a.fatigue_score}</td><td>${a.zscore}</td></tr>`;
+        });
+        sec.classList.remove('hidden');
+      }
+
+      if (data.interventions) {
+        const i = data.interventions;
+        document.getElementById('i-text').textContent =
+          `Score médio após dia com muitas pausas: ${i.avgScoreAfterHighBreakDay} | ` +
+          `Após poucas pausas: ${i.avgScoreAfterLowBreakDay} | ` +
+          `Efeito: ${i.interventionEffect} — ${i.effective ? '✅ Pausas ajudam' : '⚠️ Sem efeito claro'}`;
+        document.getElementById('interv-section').classList.remove('hidden');
+      }
+
+      if (data.latestRecords?.length) {
+        const tbody = document.querySelector('#r-table tbody');
+        data.latestRecords.forEach(r => {
+          tbody.innerHTML += `<tr>
+            <td>${(r.created_at || '').slice(0, 10)}</td>
+            <td>${r.burnout_score}</td>
+            <td>${riskBadge(r.burnout_risk)}</td>
+            <td>${r.archetype || '—'}</td>
+            <td>${r.fatigue_score ?? '—'}</td>
+            <td>${r.work_hours ?? '—'}</td>
+          </tr>`;
+        });
+        document.getElementById('records-section').classList.remove('hidden');
+      }
+
+    } catch (err) {
+      document.getElementById('loading').classList.add('hidden');
+      if (err.status === 401) {
+        window.location.href = '/login';
+        return;
+      }
+      App.showAlert(box, err.error || 'Erro ao carregar dashboard.');
+    }
+  }
+
+  loadDashboard();
+</script>

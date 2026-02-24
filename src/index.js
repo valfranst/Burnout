@@ -20,6 +20,10 @@ const publicRouter = require('./routes/public');
 const app = express();
 const PORT = process.env.PORT || 3000;
 
+// View engine (EJS)
+app.set('views', path.join(__dirname, 'views'));
+app.set('view engine', 'ejs');
+
 // ------------------------------------------------------------
 // Rate Limiters
 // ------------------------------------------------------------
@@ -42,9 +46,6 @@ const apiLimiter = rateLimit({
 // ------------------------------------------------------------
 // Middlewares
 // ------------------------------------------------------------
-// Servir arquivos estáticos da pasta public/
-app.use(express.static(path.join(__dirname, '..', 'public')));
-
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
@@ -166,14 +167,52 @@ app.get('/auth/me', (req, res) => {
 });
 
 // ------------------------------------------------------------
-// Application Routes
-// ------------------------------------------------------------
+// Application Routes (pages)
+app.get(['/', '/index.html'], (req, res) => res.render('layout', {
+  title: 'Burnout Analysis System',
+  user: req.user || null,
+  body: 'index',
+}));
+
+app.get(['/log', '/log.html'], (req, res) => res.render('layout', {
+  title: 'Novo Registro — Burnout Analysis',
+  user: req.user || null,
+  body: 'log',
+}));
+
+app.get(['/dashboard.html'], (req, res) => res.render('layout', {
+  title: 'Dashboard — Burnout Analysis',
+  user: req.user || null,
+  body: 'dashboard',
+}));
+
+app.get(['/report.html'], (req, res) => res.render('layout', {
+  title: 'Relatório Público — Burnout Analysis',
+  user: req.user || null,
+  body: 'report',
+}));
+
+app.get(['/login', '/login.html'], (_req, res) => res.render('layout', {
+  title: 'Login — Burnout Analysis',
+  user: null,
+  body: 'login',
+}));
+
+app.get(['/register', '/register.html'], (_req, res) => res.render('layout', {
+  title: 'Cadastro — Burnout Analysis',
+  user: null,
+  body: 'register',
+}));
+
 app.use('/burnout-logs', apiLimiter, doubleCsrfProtection, burnoutRouter);
 app.use('/dashboard', apiLimiter, dashboardRouter);
 app.use('/report', apiLimiter, publicRouter);
 
 // Silencia probe do Chrome DevTools / extensões
 app.get('/.well-known/appspecific/com.chrome.devtools.json', (_req, res) => res.json({}));
+
+// Servir arquivos estáticos da pasta public/
+app.use(express.static(path.join(__dirname, '..', 'public')));
 
 // Healthcheck
 app.get('/health', (_req, res) => res.json({ status: 'ok', timestamp: new Date().toISOString() }));
