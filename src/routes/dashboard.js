@@ -6,7 +6,7 @@ const {
   analyzeTemporalTrend,
   detectAnomalies,
   analyzeInterventions,
-} = require('../model');
+} = require('../modelTraining');
 
 const router = express.Router();
 

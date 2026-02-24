@@ -2,7 +2,7 @@
 
 const express = require('express');
 const pool = require('../db');
-const { analyzeLog } = require('../model');
+const { analyzeLog } = require('../modelTraining');
 
 const router = express.Router();
 

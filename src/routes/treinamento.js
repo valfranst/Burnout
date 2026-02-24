@@ -2,7 +2,7 @@
 
 const express = require('express');
 const pool = require('../db');
-const { analyzeLog } = require('../model');
+const { analyzeLog, trainModel, predictWithModel, calculateBurnoutScore, minMaxNormalize, logToFeatures, classifyRisk, assignArchetype } = require('../modelTraining');
 
 const router = express.Router();
 
@@ -32,6 +32,8 @@ router.post('/', async (req, res) => {
     task_completion = 80,
     num_records,
     action = 'train',
+    custom_weights,
+    custom_bias,
   } = req.body;
 
   // Validação do número de registros
@@ -71,24 +73,20 @@ router.post('/', async (req, res) => {
       ? parseFloat((scoreSum / totalUsed).toFixed(2))
       : null;
 
+    // Treina o modelo com registros reais do banco (mínimo 10 registros)
+    // Pula treinamento se a ação for apenas analisar
+    let realMetrics = { epochs: [], trainLoss: [], valLoss: [], trainAcc: [], valAcc: [] };
+    if (action !== 'analyze_only' && totalUsed >= 10) {
+      realMetrics = await trainModel(records);
+    }
+
     const training = {
       totalRecords: totalUsed,
       avgBurnoutScore: avgScore,
       riskDistribution: riskDist,
       archetypeDistribution: archetypeDist,
-      metrics: {
-        epochs: [1, 2, 3, 4, 5, 6],
-        trainLoss: [0.48, 0.42, 0.36, 0.31, 0.29, 0.27],
-        valLoss: [0.5, 0.44, 0.4, 0.36, 0.34, 0.33],
-        trainAcc: [0.62, 0.68, 0.73, 0.78, 0.82, 0.85],
-        valAcc: [0.6, 0.65, 0.7, 0.74, 0.77, 0.79],
-      },
+      metrics: realMetrics,
     };
-
-    // Se a ação for apenas treinar, retorna os stats sem predição
-    if (action === 'train') {
-      return res.json({ training, prediction: null });
-    }
 
     // Validação dos campos obrigatórios para predição
     const required = {
@@ -118,12 +116,33 @@ router.post('/', async (req, res) => {
       task_completion: parseInt(task_completion, 10),
     };
 
-    const { burnoutScore, burnoutRisk, archetype, normalized } = analyzeLog(logData);
+    const defaultWeights = [1.5, 9.0, 7.5, 6.0, -7.5, 3.75, 6.0, -10.5, 9.0, -6.0, 21.0];
+    const defaultBias = 15;
 
-    return res.json({
-      training,
-      prediction: { burnoutScore, burnoutRisk, archetype, normalized },
-    });
+    let prediction;
+
+    if (action === 'analyze_only') {
+      // Análise estática com pesos customizáveis
+      const features = logToFeatures(logData);
+      const norm = minMaxNormalize(features);
+      const weights = Array.isArray(custom_weights) && custom_weights.length === 11
+        ? custom_weights.map(Number)
+        : defaultWeights;
+      const bias = custom_bias != null ? Number(custom_bias) : defaultBias;
+      const score = calculateBurnoutScore(norm, weights, bias);
+      const risk = classifyRisk(score);
+      const arch = assignArchetype(norm);
+      prediction = {
+        burnoutScore: score, burnoutRisk: risk, archetype: arch,
+        normalized: norm, modelUsed: false,
+        weightsUsed: weights, biasUsed: bias,
+      };
+    } else {
+      const result = predictWithModel(logData);
+      prediction = { ...result, modelUsed: result.modelUsed || false };
+    }
+
+    return res.json({ training, prediction });
   } catch (err) {
     console.error('Erro no treinamento do modelo:', err);
     return res.status(500).json({ error: 'Erro interno ao executar o treinamento.' });

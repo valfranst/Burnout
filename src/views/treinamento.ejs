@@ -1,7 +1,8 @@
 
 <div class="container section training-container">
-  <h1 class="section-title">Treinamento de Modelo</h1>
-  <p class="text-muted mb-2">Informe as métricas e a quantidade de registros para treinar e comparar o modelo de burnout.</p>
+  <h1 class="section-title">Treinamento do Modelo</h1>
+  <p class="text-muted mb-2">Informe as métricas, escolha a quantidade de registros para treinar e comparar usando o modelo de burnout.
+    Os dados informados são normalizados e usados como parâmetro para buscas no banco de dados pelo limite informado por proximidade vetorial para análise.</p>
   <div id="alert-box"></div>
 
   <div class="training-layout">
@@ -9,37 +10,47 @@
     <div class="training-col-left">  
       <form id="training-form" class="card">
       <div class="form-group" style="margin-bottom:1rem;">
-        <label for="num_records">Quantidade de registros para comparação</label>
-        <input type="number" id="num_records" name="num_records" min="1" max="1000" required placeholder="Ex: 100" value="100">
+        <label for="num_records">Quantidade de registros para treinamento do modelo (100-300)</label>
+        <input type="number" id="num_records" name="num_records" min="100" max="300" required placeholder="Ex: 200" value="200">
+      </div>
+
+      <div class="form-group" style="margin-bottom:1rem;">
+        <label for="risk_preset">Preencher com perfil de risco</label>
+        <select id="risk_preset" name="risk_preset">
+          <option value="">— Selecione um perfil —</option>
+          <option value="low">Baixo</option>
+          <option value="medium">Moderado</option>
+          <option value="high">Elevado</option>
+        </select>
       </div>
 
       <h3 style="margin:1rem 0 .5rem; font-size:.95rem;">Métricas Comportamentais</h3>
 
       <div class="form-row">
         <div class="form-group">
-          <label for="work_hours">Horas de Trabalho</label>
+          <label for="work_hours">Horas Trabalhadas (0-18)</label>
           <input type="number" id="work_hours" name="work_hours" min="0.5" max="18" step="0.5" required placeholder="Ex: 8" value="8">
         </div>
         <div class="form-group">
-          <label for="screen_time_hours">Tempo de Tela (h)</label>
-          <input type="number" id="screen_time_hours" name="screen_time_hours" min="0" max="18" step="0.5" required placeholder="Ex: 10" value="10">
+          <label for="screen_time_hours">Tempo de Uso de Tela</label>
+          <input type="number" id="screen_time_hours" name="screen_time_hours" min="0" max="18" step="0.5" required placeholder="Ex: 10" value="8">
         </div>
       </div>
 
       <div class="form-row">
         <div class="form-group">
-          <label for="meetings_count">Reuniões</label>
-          <input type="number" id="meetings_count" name="meetings_count" min="0" max="30" required placeholder="Ex: 4" value="4">
+          <label for="meetings_count">Quantidade de Reuniões (0-16)</label>
+          <input type="number" id="meetings_count" name="meetings_count" min="0" max="16" required placeholder="Ex: 4" value="4">
         </div>
         <div class="form-group">
-          <label for="app_switches">Troca de Apps</label>
-          <input type="number" id="app_switches" name="app_switches" min="0" max="500" required placeholder="Ex: 50" value="50">
+          <label for="app_switches">Troca de Apps (0-10)</label>
+          <input type="number" id="app_switches" name="app_switches" min="0" max="10" required placeholder="Ex: 5" value="5">
         </div>
       </div>
 
       <div class="form-row">
         <div class="form-group">
-          <label for="breaks_taken">Pausas no Dia</label>
+          <label for="breaks_taken">Pausas no Dia (0-20)</label>
           <input type="number" id="breaks_taken" name="breaks_taken" min="0" max="20" required placeholder="Ex: 3" value="3">
         </div>
         <div class="form-group">
@@ -55,8 +66,8 @@
 
       <div class="form-row">
         <div class="form-group">
-          <label for="sleep_hours">Horas de Sono</label>
-          <input type="number" id="sleep_hours" name="sleep_hours" min="0" max="12" step="0.5" required placeholder="Ex: 7" value="7">
+          <label for="sleep_hours">Horas de Sono (2-10)</label>
+          <input type="number" id="sleep_hours" name="sleep_hours" min="2" max="10" step="0.5" required placeholder="Ex: 7" value="7">
         </div>
         <div class="form-group">
           <label for="fatigue_score">Fadiga (0-10)</label>
@@ -72,17 +83,17 @@
           <input type="number" id="isolation_index" name="isolation_index" min="3" max="9" step="1" required placeholder="Ex: 5" value="5">
         </div>
         <div class="form-group">
-          <label for="task_completion">Conclusão de Tarefas (%)</label>
+          <label for="task_completion">Conclusão de Tarefas (0-100 %)</label>
           <input type="number" id="task_completion" name="task_completion" min="0" max="100" value="80" placeholder="Ex: 80">
         </div>
       </div>
 
       <div class="form-row" style="margin-top:1rem; gap:.75rem;">
         <button type="submit" data-action="train_and_run" class="btn btn-primary" style="flex:1; justify-content:center;">
-          Treinar e Executar
+          Treinar e Analisar
         </button>
-        <button type="submit" data-action="train" class="btn btn-outline" style="flex:1; justify-content:center;">
-          Apenas Treinar
+        <button type="submit" data-action="analyze_only" class="btn btn-outline" style="flex:1; justify-content:center;">
+          Analisar
         </button>
       </div>
       </form>
@@ -107,36 +118,69 @@
     </div><!-- end training-col-right -->
   </div><!-- end training-layout -->
 
-  <!-- Result card (hidden initially) -->
+  <!-- Result + Weights side by side -->
+<div class="result-weights-layout">
 
-  <!-- <div id="result" class="card mb-2 result-wide" style="border-left:4px solid var(--primary);">
-    <h3>Resultado do Treinamento</h3>
+<!-- Weights form (left side) -->
+<div class="weights-card card" id="weights-panel">
+  <h4 class="section-title-accent" style="margin-bottom:.75rem; font-size:1rem;"><i class="fas fa-sliders-h"></i> Pesos da Análise Estática</h4>
+  <p style="font-size:.75rem; color:var(--muted); margin-bottom:1rem;">Ajuste os pesos e o bias usados na regressão linear ponderada. Valores negativos são fatores protetores.</p>
 
-    <div id="training-stats">
-      <h4 style="margin:1rem 0 .5rem; font-size:.9rem; color:var(--text-muted);">Conjunto de Treinamento</h4>
-      <div class="stats-grid" style="margin-top:.5rem;">
-        <div class="stat-card"><div class="stat-value" id="r-total">—</div><div class="stat-label">Registros</div></div>
-        <div class="stat-card"><div class="stat-value" id="r-avg">—</div><div class="stat-label">Score Médio</div></div>
-      </div>
-      <div style="margin-top:.75rem;">
-        <strong style="font-size:.85rem;">Distribuição de Risco</strong>
-        <div id="r-risk-dist" class="stats-grid" style="margin-top:.4rem;"></div>
-      </div>
-      <div style="margin-top:.75rem;">
-        <strong style="font-size:.85rem;">Arquétipos</strong>
-        <div id="r-arch-dist" class="stats-grid" style="margin-top:.4rem;"></div>
-      </div>
+  <div class="weights-grid">
+    <div class="weight-field">
+      <label for="w_day_type">Tipo de Dia</label>
+      <input type="number" id="w_day_type" step="0.5" value="1.5">
     </div>
-
-    <div id="prediction-section" class="hidden" style="margin-top:1.25rem; border-top:1px solid var(--border); padding-top:1rem;">
-      <h4 style="margin:0 0 .5rem; font-size:.9rem; color:var(--text-muted);">Resultado da Predição</h4>
-      <div class="stats-grid" style="margin-top:.5rem;">
-        <div class="stat-card"><div class="stat-value" id="p-score">—</div><div class="stat-label">Score</div></div>
-        <div class="stat-card"><div class="stat-value" id="p-risk">—</div><div class="stat-label">Risco</div></div>
-        <div class="stat-card"><div class="stat-value" id="p-arch">—</div><div class="stat-label">Arquétipo</div></div>
-      </div>
+    <div class="weight-field">
+      <label for="w_work_hours">Horas Trabalhadas</label>
+      <input type="number" id="w_work_hours" step="0.5" value="9.0">
     </div>
-  </div> -->
+    <div class="weight-field">
+      <label for="w_screen_time">Tempo de Tela</label>
+      <input type="number" id="w_screen_time" step="0.5" value="7.5">
+    </div>
+    <div class="weight-field">
+      <label for="w_meetings">Reuniões</label>
+      <input type="number" id="w_meetings" step="0.5" value="6.0">
+    </div>
+    <div class="weight-field">
+      <label for="w_breaks">Pausas <span class="weight-tag protector">protetor</span></label>
+      <input type="number" id="w_breaks" step="0.5" value="-7.5">
+    </div>
+    <div class="weight-field">
+      <label for="w_after_hours">Hora Extra</label>
+      <input type="number" id="w_after_hours" step="0.5" value="3.75">
+    </div>
+    <div class="weight-field">
+      <label for="w_app_switches">Troca de Apps</label>
+      <input type="number" id="w_app_switches" step="0.5" value="6.0">
+    </div>
+    <div class="weight-field">
+      <label for="w_sleep">Sono <span class="weight-tag protector">protetor</span></label>
+      <input type="number" id="w_sleep" step="0.5" value="-10.5">
+    </div>
+    <div class="weight-field">
+      <label for="w_isolation">Isolamento</label>
+      <input type="number" id="w_isolation" step="0.5" value="9.0">
+    </div>
+    <div class="weight-field">
+      <label for="w_task_completion">Conclusão Tarefas <span class="weight-tag protector">protetor</span></label>
+      <input type="number" id="w_task_completion" step="0.5" value="-6.0">
+    </div>
+    <div class="weight-field">
+      <label for="w_fatigue">Fadiga <span class="weight-tag dominant">dominante</span></label>
+      <input type="number" id="w_fatigue" step="0.5" value="21.0">
+    </div>
+    <div class="weight-field">
+      <label for="w_bias">Bias (baseline)</label>
+      <input type="number" id="w_bias" step="1" value="15">
+    </div>
+  </div>
+
+  <div style="margin-top:1rem; display:flex; gap:.5rem;">
+    <button type="button" id="btn-reset-weights" class="btn btn-outline" style="flex:1; justify-content:center; font-size:.8rem;">Restaurar Padrão</button>
+  </div>
+</div>
 
 <div class="result-card" id="result">
   <div class="header-section">
@@ -201,6 +245,7 @@
   </div>
 </div>
 
+</div><!-- end result-weights-layout -->
 
   
 </div>
@@ -233,6 +278,23 @@
   });
 
   const closeIsolationModal = () => isolationModal.classList.add('hidden');
+
+  // Presets de perfil de risco
+  const riskPresets = {
+    low:    { work_hours: 6, screen_time_hours: 4, meetings_count: 2, app_switches: 2, breaks_taken: 5, after_hours_work: 'false', sleep_hours: 8, fatigue_score: 2, isolation_index: 3, task_completion: 90 },
+    medium: { work_hours: 9, screen_time_hours: 8, meetings_count: 6, app_switches: 5, breaks_taken: 3, after_hours_work: 'false', sleep_hours: 6, fatigue_score: 6, isolation_index: 6, task_completion: 65 },
+    high:   { work_hours: 14, screen_time_hours: 12, meetings_count: 10, app_switches: 9, breaks_taken: 1, after_hours_work: 'true', sleep_hours: 3, fatigue_score: 9, isolation_index: 8, task_completion: 30 },
+  };
+
+  document.getElementById('risk_preset').addEventListener('change', (e) => {
+    const preset = riskPresets[e.target.value];
+    if (!preset) return;
+    const form = document.getElementById('training-form');
+    Object.entries(preset).forEach(([field, value]) => {
+      const el = form.elements[field];
+      if (el) el.value = value;
+    });
+  });
   if (isolationInfoBtn && isolationModal) isolationInfoBtn.addEventListener('click', () => isolationModal.classList.remove('hidden'));
   if (isolationOverlay) isolationOverlay.addEventListener('click', closeIsolationModal);
   if (isoModalClose) isoModalClose.addEventListener('click', closeIsolationModal);
@@ -265,6 +327,23 @@
     document.getElementById('charts-section').classList.remove('hidden');
   }
 
+  // Inicializa gráficos com valores padrão
+  renderTrainingCharts({
+    epochs: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10],
+    trainLoss: [0.06, 0.05, 0.04, 0.03, 0.025, 0.02, 0.015, 0.01, 0.008, 0.006],
+    valLoss:   [0.07, 0.055, 0.045, 0.035, 0.03, 0.025, 0.02, 0.015, 0.012, 0.009],
+    trainAcc:  [0.55, 0.62, 0.68, 0.74, 0.78, 0.82, 0.86, 0.89, 0.91, 0.93],
+    valAcc:    [0.50, 0.58, 0.64, 0.70, 0.74, 0.78, 0.82, 0.85, 0.87, 0.89],
+  });
+
+  // Restaurar pesos padrão
+  document.getElementById('btn-reset-weights').addEventListener('click', () => {
+    const defaults = [1.5, 9.0, 7.5, 6.0, -7.5, 3.75, 6.0, -10.5, 9.0, -6.0, 21.0];
+    const ids = ['w_day_type','w_work_hours','w_screen_time','w_meetings','w_breaks','w_after_hours','w_app_switches','w_sleep','w_isolation','w_task_completion','w_fatigue'];
+    defaults.forEach((v, i) => document.getElementById(ids[i]).value = v);
+    document.getElementById('w_bias').value = 15;
+  });
+
   document.getElementById('training-form').addEventListener('submit', async (e) => {
     e.preventDefault();
     const action = e.submitter?.dataset?.action || 'train';
@@ -272,31 +351,80 @@
     const box = document.getElementById('alert-box');
     App.hideAlert(box);
 
+    const workHours = parseFloat(form.work_hours.value);
+    const screenTime = parseFloat(form.screen_time_hours.value);
+    const meetingsCount = parseInt(form.meetings_count.value, 10);
+    const appSwitches = parseInt(form.app_switches.value, 10);
+    const breaksTaken = parseInt(form.breaks_taken.value, 10);
+    const sleepHours = parseFloat(form.sleep_hours.value);
+    const taskCompletion = parseInt(form.task_completion.value, 10);
     const isoVal = parseInt(form.isolation_index.value, 10);
+    const numRecords = parseInt(form.num_records.value, 10);
+
+    if (Number.isNaN(numRecords) || numRecords < 100 || numRecords > 1000) {
+      App.showAlert(box, 'Quantidade de registros deve estar entre 100 e 1000.');
+      return;
+    }
+    if (Number.isNaN(screenTime) || screenTime > workHours) {
+      App.showAlert(box, 'Tempo de tela não pode ser maior que horas de trabalho.');
+      return;
+    }
+    if (Number.isNaN(meetingsCount) || meetingsCount < 0 || meetingsCount > 16) {
+      App.showAlert(box, 'Reuniões deve estar entre 0 e 16.');
+      return;
+    }
+    if (Number.isNaN(appSwitches) || appSwitches < 0 || appSwitches > 10) {
+      App.showAlert(box, 'Troca de apps deve estar entre 0 e 10.');
+      return;
+    }
+    if (Number.isNaN(breaksTaken) || breaksTaken < 0 || breaksTaken > 16) {
+      App.showAlert(box, 'Pausas no dia deve estar entre 0 e 16.');
+      return;
+    }
+    if (Number.isNaN(sleepHours) || sleepHours < 2 || sleepHours > 10) {
+      App.showAlert(box, 'Horas de sono deve estar entre 2 e 10.');
+      return;
+    }
+    if (Number.isNaN(taskCompletion) || taskCompletion < 0 || taskCompletion > 100) {
+      App.showAlert(box, 'Conclusão de tarefas deve estar entre 0 e 100.');
+      return;
+    }
     if (Number.isNaN(isoVal) || isoVal < 3 || isoVal > 9) {
       App.showAlert(box, 'Índice de isolamento deve estar entre 3 e 9.');
       return;
     }
 
-    const numRecords = parseInt(form.num_records.value, 10);
-    if (Number.isNaN(numRecords) || numRecords < 1 || numRecords > 1000) {
-      App.showAlert(box, 'Quantidade de registros deve estar entre 1 e 1000.');
-      return;
-    }
+    // Coleta pesos customizados do painel lateral
+    const customWeights = [
+      parseFloat(document.getElementById('w_day_type').value),
+      parseFloat(document.getElementById('w_work_hours').value),
+      parseFloat(document.getElementById('w_screen_time').value),
+      parseFloat(document.getElementById('w_meetings').value),
+      parseFloat(document.getElementById('w_breaks').value),
+      parseFloat(document.getElementById('w_after_hours').value),
+      parseFloat(document.getElementById('w_app_switches').value),
+      parseFloat(document.getElementById('w_sleep').value),
+      parseFloat(document.getElementById('w_isolation').value),
+      parseFloat(document.getElementById('w_task_completion').value),
+      parseFloat(document.getElementById('w_fatigue').value),
+    ];
+    const customBias = parseFloat(document.getElementById('w_bias').value);
 
     const payload = {
       num_records: numRecords,
       action,
-      work_hours: parseFloat(form.work_hours.value),
-      screen_time_hours: parseFloat(form.screen_time_hours.value),
-      meetings_count: parseInt(form.meetings_count.value, 10),
-      app_switches: parseInt(form.app_switches.value, 10),
-      breaks_taken: parseInt(form.breaks_taken.value, 10),
+      work_hours: workHours,
+      screen_time_hours: screenTime,
+      meetings_count: meetingsCount,
+      app_switches: appSwitches,
+      breaks_taken: breaksTaken,
       after_hours_work: form.after_hours_work.value === 'true',
-      sleep_hours: parseFloat(form.sleep_hours.value),
+      sleep_hours: sleepHours,
       fatigue_score: parseFloat(form.fatigue_score.value),
       isolation_index: isoVal,
-      task_completion: parseInt(form.task_completion.value, 10),
+      task_completion: taskCompletion,
+      custom_weights: customWeights,
+      custom_bias: customBias,
     };
 
     try {
@@ -306,36 +434,86 @@
       document.getElementById('r-total').textContent = res.training.totalRecords;
       document.getElementById('r-avg').textContent = res.training.avgBurnoutScore ?? '—';
 
-      // Distribuição de risco
-      const riskDist = res.training.riskDistribution;
-      document.getElementById('r-risk-dist').innerHTML = Object.entries(riskDist)
-        .map(([risk, count]) => `<div class="stat-card"><div class="stat-value">${count}</div><div class="stat-label"><span class="badge badge-${risk.toLowerCase()}">${risk}</span></div></div>`)
-        .join('');
+      // Distribuição de risco (barras de progresso)
+      const riskDist = res.training.riskDistribution || {};
+      const totalRisk = (riskDist.Low || 0) + (riskDist.Medium || 0) + (riskDist.High || 0);
+      if (totalRisk > 0) {
+        const pctLow = ((riskDist.Low || 0) / totalRisk * 100).toFixed(0);
+        const pctMed = ((riskDist.Medium || 0) / totalRisk * 100).toFixed(0);
+        const pctHigh = ((riskDist.High || 0) / totalRisk * 100).toFixed(0);
 
-      // Arquétipos
-      const archDist = res.training.archetypeDistribution;
-      document.getElementById('r-arch-dist').innerHTML = Object.entries(archDist).length
-        ? Object.entries(archDist)
-            .sort((a, b) => b[1] - a[1])
-            .map(([arch, count]) => `<div class="stat-card"><div class="stat-value">${count}</div><div class="stat-label">${arch}</div></div>`)
-            .join('')
-        : '<span class="text-muted" style="font-size:.85rem;">Nenhum dado disponível</span>';
+        const progressItems = document.querySelectorAll('.progress-stack .progress-item');
+        if (progressItems.length >= 3) {
+          progressItems[0].style.width = pctLow + '%';
+          progressItems[0].title = 'Baixo: ' + pctLow + '%';
+          progressItems[1].style.width = pctMed + '%';
+          progressItems[1].title = 'Médio: ' + pctMed + '%';
+          progressItems[2].style.width = pctHigh + '%';
+          progressItems[2].title = 'Alto: ' + pctHigh + '%';
+        }
 
-      renderTrainingCharts(res.training?.metrics);
+        const elevatedEl = document.getElementById('r-risk-elevated');
+        if (elevatedEl) elevatedEl.textContent = pctHigh + '%';
+      }
+
+      // Só renderiza gráficos se houve treinamento (não no modo analyze_only)
+      if (action !== 'analyze_only') {
+        renderTrainingCharts(res.training?.metrics);
+      }
 
       // Predição (se 'train_and_run')
       const predSection = document.getElementById('prediction-section');
       if (res.prediction) {
-        document.getElementById('p-score').textContent = res.prediction.burnoutScore;
-        document.getElementById('p-risk').innerHTML = `<span class="badge badge-${res.prediction.burnoutRisk.toLowerCase()}">${res.prediction.burnoutRisk}</span>`;
-        document.getElementById('p-arch').textContent = res.prediction.archetype;
+        const scoreCircle = document.getElementById('p-score-circle');
+        const riskLabel = document.getElementById('p-risk-label');
+        const archName = document.getElementById('p-arch-name');
+        const adviceEl = document.getElementById('p-advice');
+
+        if (scoreCircle) {
+          scoreCircle.textContent = res.prediction.burnoutScore;
+          const riskColor = res.prediction.burnoutRisk === 'High' ? 'var(--danger)' :
+                            res.prediction.burnoutRisk === 'Medium' ? 'var(--warning)' : 'var(--success)';
+          scoreCircle.style.borderColor = riskColor;
+          scoreCircle.style.color = riskColor;
+        }
+
+        if (riskLabel) {
+          const riskText = res.prediction.burnoutRisk === 'High' ? 'Risco Crítico' :
+                           res.prediction.burnoutRisk === 'Medium' ? 'Risco Moderado' : 'Risco Baixo';
+          const riskClass = 'badge-risk risk-' + res.prediction.burnoutRisk.toLowerCase();
+          riskLabel.className = riskClass;
+          riskLabel.textContent = riskText;
+        }
+
+        if (archName) archName.textContent = res.prediction.archetype || '—';
+
+        if (adviceEl) {
+          const adviceMap = {
+            Sobrecarregado: 'Alta carga horária com pouco descanso. Recomenda-se reduzir horas extras e aumentar pausas.',
+            Isolado: 'Baixo engajamento social detectado. Recomenda-se maior interação com a equipe.',
+            Equilibrado: 'Perfil saudável. Continue mantendo o equilíbrio entre trabalho e descanso.',
+            AltaAutonomia: 'Boa autonomia, mas atenção ao isolamento. Mantenha conexões regulares com colegas.',
+          };
+          adviceEl.innerHTML = '<i class="fas fa-info-circle"></i> ' + (adviceMap[res.prediction.archetype] || 'Análise concluída. Verifique os indicadores detalhados.');
+        }
+
         predSection.classList.remove('hidden');
       } else {
         predSection.classList.add('hidden');
       }
 
       document.getElementById('result').classList.remove('hidden');
-      App.showAlert(box, 'Treinamento concluído com sucesso!', 'success');
+      // Atualiza painel de pesos se o servidor retornou os pesos usados
+      if (res.prediction?.weightsUsed) {
+        const wIds = ['w_day_type','w_work_hours','w_screen_time','w_meetings','w_breaks','w_after_hours','w_app_switches','w_sleep','w_isolation','w_task_completion','w_fatigue'];
+        res.prediction.weightsUsed.forEach((w, i) => {
+          if (wIds[i]) document.getElementById(wIds[i]).value = w;
+        });
+        if (res.prediction.biasUsed != null) document.getElementById('w_bias').value = res.prediction.biasUsed;
+      }
+
+      document.getElementById('weights-panel').classList.remove('hidden');
+      App.showAlert(box, res.prediction?.modelUsed ? 'Treinamento concluído — predição via rede neural!' : 'Análise estática concluída com pesos customizados!', 'success');
     } catch (err) {
       App.showAlert(box, err.error || 'Erro ao executar o treinamento.');
     }
