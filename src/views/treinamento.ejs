@@ -1,46 +1,16 @@
-<div class="container section">
+
+<div class="container section training-container">
   <h1 class="section-title">Treinamento de Modelo</h1>
   <p class="text-muted mb-2">Informe as métricas e a quantidade de registros para treinar e comparar o modelo de burnout.</p>
   <div id="alert-box"></div>
 
   <div class="training-layout">
     <!-- Left column: result stats + form -->
-    <div class="training-col-left">
-
-      <!-- Result card (hidden initially) -->
-      <div id="result" class="card hidden mb-2" style="border-left:4px solid var(--primary);">
-        <h3>Resultado do Treinamento</h3>
-
-        <div id="training-stats">
-          <h4 style="margin:1rem 0 .5rem; font-size:.9rem; color:var(--text-muted);">Conjunto de Treinamento</h4>
-          <div class="stats-grid" style="margin-top:.5rem;">
-            <div class="stat-card"><div class="stat-value" id="r-total">—</div><div class="stat-label">Registros</div></div>
-            <div class="stat-card"><div class="stat-value" id="r-avg">—</div><div class="stat-label">Score Médio</div></div>
-          </div>
-          <div style="margin-top:.75rem;">
-            <strong style="font-size:.85rem;">Distribuição de Risco</strong>
-            <div id="r-risk-dist" class="stats-grid" style="margin-top:.4rem;"></div>
-          </div>
-          <div style="margin-top:.75rem;">
-            <strong style="font-size:.85rem;">Arquétipos</strong>
-            <div id="r-arch-dist" class="stats-grid" style="margin-top:.4rem;"></div>
-          </div>
-        </div>
-
-        <div id="prediction-section" class="hidden" style="margin-top:1.25rem; border-top:1px solid var(--border); padding-top:1rem;">
-          <h4 style="margin:0 0 .5rem; font-size:.9rem; color:var(--text-muted);">Resultado da Predição</h4>
-          <div class="stats-grid" style="margin-top:.5rem;">
-            <div class="stat-card"><div class="stat-value" id="p-score">—</div><div class="stat-label">Score</div></div>
-            <div class="stat-card"><div class="stat-value" id="p-risk">—</div><div class="stat-label">Risco</div></div>
-            <div class="stat-card"><div class="stat-value" id="p-arch">—</div><div class="stat-label">Arquétipo</div></div>
-          </div>
-        </div>
-      </div>
-
+    <div class="training-col-left">  
       <form id="training-form" class="card">
       <div class="form-group" style="margin-bottom:1rem;">
         <label for="num_records">Quantidade de registros para comparação</label>
-        <input type="number" id="num_records" name="num_records" min="1" max="1000" required placeholder="Ex: 100">
+        <input type="number" id="num_records" name="num_records" min="1" max="1000" required placeholder="Ex: 100" value="100">
       </div>
 
       <h3 style="margin:1rem 0 .5rem; font-size:.95rem;">Métricas Comportamentais</h3>
@@ -48,29 +18,29 @@
       <div class="form-row">
         <div class="form-group">
           <label for="work_hours">Horas de Trabalho</label>
-          <input type="number" id="work_hours" name="work_hours" min="0.5" max="18" step="0.5" required placeholder="Ex: 8">
+          <input type="number" id="work_hours" name="work_hours" min="0.5" max="18" step="0.5" required placeholder="Ex: 8" value="8">
         </div>
         <div class="form-group">
           <label for="screen_time_hours">Tempo de Tela (h)</label>
-          <input type="number" id="screen_time_hours" name="screen_time_hours" min="0" max="18" step="0.5" required placeholder="Ex: 10">
+          <input type="number" id="screen_time_hours" name="screen_time_hours" min="0" max="18" step="0.5" required placeholder="Ex: 10" value="10">
         </div>
       </div>
 
       <div class="form-row">
         <div class="form-group">
           <label for="meetings_count">Reuniões</label>
-          <input type="number" id="meetings_count" name="meetings_count" min="0" max="30" required placeholder="Ex: 4">
+          <input type="number" id="meetings_count" name="meetings_count" min="0" max="30" required placeholder="Ex: 4" value="4">
         </div>
         <div class="form-group">
           <label for="app_switches">Troca de Apps</label>
-          <input type="number" id="app_switches" name="app_switches" min="0" max="500" required placeholder="Ex: 50">
+          <input type="number" id="app_switches" name="app_switches" min="0" max="500" required placeholder="Ex: 50" value="50">
         </div>
       </div>
 
       <div class="form-row">
         <div class="form-group">
           <label for="breaks_taken">Pausas no Dia</label>
-          <input type="number" id="breaks_taken" name="breaks_taken" min="0" max="20" required placeholder="Ex: 3">
+          <input type="number" id="breaks_taken" name="breaks_taken" min="0" max="20" required placeholder="Ex: 3" value="3">
         </div>
         <div class="form-group">
           <label for="after_hours_work">Trabalhou Após Expediente?</label>
@@ -86,11 +56,11 @@
       <div class="form-row">
         <div class="form-group">
           <label for="sleep_hours">Horas de Sono</label>
-          <input type="number" id="sleep_hours" name="sleep_hours" min="0" max="12" step="0.5" required placeholder="Ex: 7">
+          <input type="number" id="sleep_hours" name="sleep_hours" min="0" max="12" step="0.5" required placeholder="Ex: 7" value="7">
         </div>
         <div class="form-group">
           <label for="fatigue_score">Fadiga (0-10)</label>
-          <input type="number" id="fatigue_score" name="fatigue_score" min="0" max="10" step="0.5" required placeholder="Ex: 6">
+          <input type="number" id="fatigue_score" name="fatigue_score" min="0" max="10" step="0.5" required placeholder="Ex: 6" value="6">
         </div>
       </div>
 
@@ -99,7 +69,7 @@
           <label for="isolation_index">Índice de Isolamento (3-9)
             <button type="button" class="info-icon" id="isolation-info-btn" aria-label="Como preencher o índice de isolamento">i</button>
           </label>
-          <input type="number" id="isolation_index" name="isolation_index" min="3" max="9" step="1" required placeholder="Ex: 5">
+          <input type="number" id="isolation_index" name="isolation_index" min="3" max="9" step="1" required placeholder="Ex: 5" value="5">
         </div>
         <div class="form-group">
           <label for="task_completion">Conclusão de Tarefas (%)</label>
@@ -115,28 +85,124 @@
           Apenas Treinar
         </button>
       </div>
-    </form>
+      </form>
     </div><!-- end training-col-left -->
 
     <!-- Right column: charts -->
     <div class="training-col-right">
-      <div id="charts-section" class="hidden">
-        <h4 style="margin:0 0 .75rem; font-size:.9rem; color:var(--text-muted);">Desempenho do Modelo</h4>
+      <div id="charts-section">
         <div class="card mb-2">
-          <h5 style="margin-bottom:.5rem;">Acurácia (treino vs. validação)</h5>
-          <div style="position:relative; height:180px;">
+          <h5 style="margin-bottom:.5rem;">Precisão do Modelo</h5>
+          <div style="position:relative; height:240px;">
             <canvas id="chart-acc"></canvas>
           </div>
         </div>
         <div class="card">
-          <h5 style="margin-bottom:.5rem;">Erro / Loss (treino vs. validação)</h5>
-          <div style="position:relative; height:180px;">
+          <h5 style="margin-bottom:.5rem;">Erro de Treinamento</h5>
+          <div style="position:relative; height:240px;">
             <canvas id="chart-loss"></canvas>
           </div>
         </div>
       </div>
     </div><!-- end training-col-right -->
   </div><!-- end training-layout -->
+
+  <!-- Result card (hidden initially) -->
+
+  <!-- <div id="result" class="card mb-2 result-wide" style="border-left:4px solid var(--primary);">
+    <h3>Resultado do Treinamento</h3>
+
+    <div id="training-stats">
+      <h4 style="margin:1rem 0 .5rem; font-size:.9rem; color:var(--text-muted);">Conjunto de Treinamento</h4>
+      <div class="stats-grid" style="margin-top:.5rem;">
+        <div class="stat-card"><div class="stat-value" id="r-total">—</div><div class="stat-label">Registros</div></div>
+        <div class="stat-card"><div class="stat-value" id="r-avg">—</div><div class="stat-label">Score Médio</div></div>
+      </div>
+      <div style="margin-top:.75rem;">
+        <strong style="font-size:.85rem;">Distribuição de Risco</strong>
+        <div id="r-risk-dist" class="stats-grid" style="margin-top:.4rem;"></div>
+      </div>
+      <div style="margin-top:.75rem;">
+        <strong style="font-size:.85rem;">Arquétipos</strong>
+        <div id="r-arch-dist" class="stats-grid" style="margin-top:.4rem;"></div>
+      </div>
+    </div>
+
+    <div id="prediction-section" class="hidden" style="margin-top:1.25rem; border-top:1px solid var(--border); padding-top:1rem;">
+      <h4 style="margin:0 0 .5rem; font-size:.9rem; color:var(--text-muted);">Resultado da Predição</h4>
+      <div class="stats-grid" style="margin-top:.5rem;">
+        <div class="stat-card"><div class="stat-value" id="p-score">—</div><div class="stat-label">Score</div></div>
+        <div class="stat-card"><div class="stat-value" id="p-risk">—</div><div class="stat-label">Risco</div></div>
+        <div class="stat-card"><div class="stat-value" id="p-arch">—</div><div class="stat-label">Arquétipo</div></div>
+      </div>
+    </div>
+  </div> -->
+
+<div class="result-card" id="result">
+  <div class="header-section">
+    <h3><i class="fas fa-brain"></i> Análise de Bem-estar Remoto</h3>
+    <span style="font-size: 0.8rem; color: var(--text-muted)">Dataset: Burnout 2026</span>
+  </div>
+
+  <div id="training-stats">
+
+    <div class="stats-row">
+      <div class="stat-box">
+        <div class="label">Total Analisado</div>
+        <div class="value" id="r-total">15.420</div>
+      </div>
+      <div class="stat-box">
+        <div class="label">Média de Burnout</div>
+        <div class="value" id="r-avg">6.4</div>
+      </div>
+
+      <div class="stat-box">
+        <div class="label">Risco Elevado</div>
+        <div class="value" id="r-risk-elevated">35%</div>
+      </div>
+    </div>
+
+    <div class="distribution-container">
+      <span class="dist-title">Distribuição de Risco (Burnout Score)</span>
+      <div class="progress-stack">
+        <div class="progress-item" style="width: 20%; background: var(--success);" title="Baixo"></div>
+        <div class="progress-item" style="width: 45%; background: var(--warning);" title="Médio"></div>
+        <div class="progress-item" style="width: 35%; background: var(--danger);" title="Alto"></div>
+      </div>
+      <div style="display: flex; justify-content: space-between; font-size: 0.7rem; color: var(--text-muted);">
+        <span>Baixo (0-3)</span>
+        <span>Moderado (4-7)</span>
+        <span>Elevado (8-10)</span>
+      </div>
+    </div>
+  </div>
+
+  <div id="prediction-section" class="prediction-highlight">
+    <h4 style="margin: 0 0 1rem; font-size: 0.9rem; color: var(--text-muted); text-transform: uppercase;">Resultado da Predição Individual</h4>
+    
+    <div class="prediction-grid">
+      <div class="score-gauge">
+        <div class="score-circle" id="p-score-circle" style="border-color: var(--danger); color: var(--danger);">
+          8.2
+        </div>
+        <span class="badge-risk risk-high" id="p-risk-label">Risco Crítico</span>
+      </div>
+
+      <div class="prediction-details">
+        <div style="margin-bottom: 10px;">
+          <small style="color: var(--text-muted); display:block;">Arquétipo Identificado:</small>
+          <strong id="p-arch-name" style="font-size: 1.1rem; color: var(--text-main);">Isolamento Produtivo</strong>
+        </div>
+        <p id="p-advice" style="font-size: 0.85rem; color: var(--text-muted); margin: 0;">
+          <i class="fas fa-info-circle"></i> O colaborador apresenta alta carga horária com baixo engajamento social. Recomenda-se pausa obrigatória.
+        </p>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+  
 </div>
 
 <div id="isolation-modal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="iso-modal-title">
