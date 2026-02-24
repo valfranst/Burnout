@@ -1,103 +1,140 @@
-<div class="container section">
-  <div style="max-width:640px; margin:0 auto;">
-    <h1 class="section-title">Registrar meu dia</h1>
-    <p class="text-muted mb-2">Preencha as métricas do seu dia para receber a análise de burnout.</p>
-    <div id="alert-box"></div>
+<div class="container section training-container">
+  <h1 class="section-title">Registrar meu dia</h1>
+  <p class="text-muted mb-2">Preencha as métricas do seu dia para receber a análise de burnout. Mantemos limites explícitos para evitar distorções no modelo e garantir recomendações consistentes.</p>
+  <div id="alert-box"></div>
 
-    <!-- Result card (hidden initially) -->
-    <div id="result" class="card hidden mb-2" style="border-left:4px solid var(--primary);">
-      <h3>Resultado da Análise</h3>
-      <div class="stats-grid" style="margin-top:1rem;">
-        <div class="stat-card"><div class="stat-value" id="r-score">—</div><div class="stat-label">Score</div></div>
-        <div class="stat-card"><div class="stat-value" id="r-risk">—</div><div class="stat-label">Risco</div></div>
-        <div class="stat-card"><div class="stat-value" id="r-arch">—</div><div class="stat-label">Arquétipo</div></div>
-      </div>
-    </div>
+  <div class="training-layout">
+        
+        <!-- Left column: result stats + form -->
+        <div class="training-col-left"> 
+           <form id="log-form" class="card">
+              <div class="form-row">
+                <div class="form-group">
+                  <label for="data_registro">Data</label>
+                  <input type="date" id="data_registro" name="data_registro">
+                </div>
+                <div class="form-group">
+                  <label for="day_type">Tipo de Dia</label>
+                  <select id="day_type" name="day_type" disabled>
+                    <option value="Weekday">Dia útil</option>
+                    <option value="Weekend">Final de semana</option>
+                  </select>
+                </div>
+              </div>
 
-    <form id="log-form" class="card">
-      <div class="form-row">
-        <div class="form-group">
-          <label for="data_registro">Data</label>
-          <input type="date" id="data_registro" name="data_registro">
-        </div>
-        <div class="form-group">
-          <label for="day_type">Tipo de Dia</label>
-          <select id="day_type" name="day_type" disabled>
-            <option value="Weekday">Dia útil</option>
-            <option value="Weekend">Final de semana</option>
-          </select>
-        </div>
-      </div>
+              <h3 style="margin:1rem 0 .5rem; font-size:.95rem;">Métricas Comportamentais</h3>
 
-      <h3 style="margin:1rem 0 .5rem; font-size:.95rem;">Métricas Comportamentais</h3>
+              <div class="form-row">
+                <div class="form-group">
+                  <label for="work_hours">Horas Trabalhadas (0-18)</label>
+                  <input type="number" id="work_hours" name="work_hours" min="0.5" max="18" step="0.5" required placeholder="Ex: 8">
+                </div>
+                <div class="form-group">
+                  <label for="screen_time_hours">Tempo de Uso de Tela</label>
+                  <input type="number" id="screen_time_hours" name="screen_time_hours" min="0" max="18" step="0.5" required placeholder="Ex: 10">
+                </div>
+              </div>
 
-      <div class="form-row">
-        <div class="form-group">
-          <label for="work_hours">Horas de Trabalho</label>
-          <input type="number" id="work_hours" name="work_hours" min="0.5" max="18" step="0.5" required placeholder="Ex: 8">
-        </div>
-        <div class="form-group">
-          <label for="screen_time_hours">Tempo de Tela (h)</label>
-          <input type="number" id="screen_time_hours" name="screen_time_hours" min="0" max="18" step="0.5" required placeholder="Ex: 10">
-        </div>
-      </div>
+              <div class="form-row">
+                <div class="form-group">
+                  <label for="meetings_count">Quantidade de Reuniões (0-16)</label>
+                  <input type="number" id="meetings_count" name="meetings_count" min="0" max="16" required placeholder="Ex: 4">
+                </div>
+                <div class="form-group">
+                  <label for="app_switches">Troca de Apps (0-10)</label>
+                  <input type="number" id="app_switches" name="app_switches" min="0" max="10" required placeholder="Ex: 5">
+                </div>
+              </div>
 
-      <div class="form-row">
-        <div class="form-group">
-          <label for="meetings_count">Reuniões</label>
-          <input type="number" id="meetings_count" name="meetings_count" min="0" max="16" required placeholder="Ex: 4">
-        </div>
-        <div class="form-group">
-          <label for="app_switches">Troca de Apps</label>
-          <input type="number" id="app_switches" name="app_switches" min="0" max="10" required placeholder="Ex: 5">
-        </div>
-      </div>
+              <div class="form-row">
+                <div class="form-group">
+                  <label for="breaks_taken">Pausas no Dia (0-20)</label>
+                  <input type="number" id="breaks_taken" name="breaks_taken" min="0" max="20" required placeholder="Ex: 3">
+                </div>
+                <div class="form-group">
+                  <label for="after_hours_work">Trabalhou Após Expediente?</label>
+                  <select id="after_hours_work" name="after_hours_work">
+                    <option value="false">Não</option>
+                    <option value="true">Sim</option>
+                  </select>
+                </div>
+              </div>
 
-      <div class="form-row">
-        <div class="form-group">
-          <label for="breaks_taken">Pausas no Dia</label>
-          <input type="number" id="breaks_taken" name="breaks_taken" min="0" max="20" required placeholder="Ex: 3">
-        </div>
-        <div class="form-group">
-          <label for="after_hours_work">Trabalhou Após Expediente?</label>
-          <select id="after_hours_work" name="after_hours_work">
-            <option value="false">Não</option>
-            <option value="true">Sim</option>
-          </select>
-        </div>
-      </div>
+              <h3 style="margin:1rem 0 .5rem; font-size:.95rem;">Métricas Psicológicas</h3>
 
-      <h3 style="margin:1rem 0 .5rem; font-size:.95rem;">Métricas Psicológicas</h3>
+              <div class="form-row">
+                <div class="form-group">
+                  <label for="sleep_hours">Horas de Sono (2-10)</label>
+                  <input type="number" id="sleep_hours" name="sleep_hours" min="2" max="10" step="0.5" required placeholder="Ex: 7">
+                </div>
+                <div class="form-group">
+                  <label for="fatigue_score">Fadiga (0-10)</label>
+                  <input type="number" id="fatigue_score" name="fatigue_score" min="0" max="10" step="0.5" required placeholder="Ex: 6">
+                </div>
+              </div>
 
-      <div class="form-row">
-        <div class="form-group">
-          <label for="sleep_hours">Horas de Sono</label>
-          <input type="number" id="sleep_hours" name="sleep_hours" min="2" max="10" step="0.5" required placeholder="Ex: 7">
-        </div>
-        <div class="form-group">
-          <label for="fatigue_score">Fadiga (0-10)</label>
-          <input type="number" id="fatigue_score" name="fatigue_score" min="0" max="10" step="0.5" required placeholder="Ex: 6">
-        </div>
-      </div>
+              <div class="form-row">
+                <div class="form-group">
+                  <label for="isolation_index">Índice de Isolamento (3-9)
+                    <button type="button" class="info-icon" id="isolation-info-btn" aria-label="Como preencher o índice de isolamento">i</button>
+                  </label>
+                  <input type="number" id="isolation_index" name="isolation_index" min="3" max="9" step="1" required placeholder="Ex: 5">
+                </div>
+                <div class="form-group">
+                  <label for="task_completion">Conclusão de Tarefas (0-100 %)</label>
+                  <input type="number" id="task_completion" name="task_completion" min="0" max="100" value="80" placeholder="Ex: 80">
+                </div>
+              </div>
 
-      <div class="form-row">
-        <div class="form-group">
-          <label for="isolation_index">Índice de Isolamento (3-9)
-            <button type="button" class="info-icon" id="isolation-info-btn" aria-label="Como preencher o índice de isolamento">i</button>
-          </label>
-          <input type="number" id="isolation_index" name="isolation_index" min="3" max="9" step="1" required placeholder="Ex: 5">
+              <button type="submit" class="btn btn-primary" style="width:100%; justify-content:center; margin-top:1rem;">
+                Enviar e Analisar
+              </button>
+          </form>
         </div>
-        <div class="form-group">
-          <label for="task_completion">Conclusão de Tarefas (%)</label>
-          <input type="number" id="task_completion" name="task_completion" min="0" max="100" value="80" placeholder="Ex: 80">
-        </div>
-      </div>
 
-      <button type="submit" class="btn btn-primary" style="width:100%; justify-content:center; margin-top:1rem;">
-        Enviar e Analisar
-      </button>
-    </form>
-  </div>
+        <!-- Right column: result -->
+        <div class="training-col-right">
+          <div class="result-card" id="result">
+            <div class="header-section">
+              <h3><i class="fas fa-brain"></i> Resultado da Análise</h3>
+            </div>
+
+            <div class="distribution-container">
+              <span class="dist-title">Distribuição de Risco (Burnout Score)</span>
+              <div class="progress-stack">
+                <div class="progress-item" style="width: 20%; background: var(--success);" title="Baixo"></div>
+                <div class="progress-item" style="width: 45%; background: var(--warning);" title="Médio"></div>
+                <div class="progress-item" style="width: 35%; background: var(--danger);" title="Alto"></div>
+              </div>
+              <div style="display: flex; justify-content: space-between; font-size: 0.7rem; color: var(--text-muted);">
+                <span>Baixo (0-3)</span>
+                <span>Moderado (4-7)</span>
+                <span>Elevado (8-10)</span>
+              </div>
+            </div>
+
+            <div class="prediction-highlight">
+              <h4 style="margin: 0 0 1rem; font-size: 0.9rem; color: var(--text-muted); text-transform: uppercase;">Predição Individual</h4>
+
+              <div class="prediction-grid">
+                <div class="score-gauge">
+                  <div class="score-circle" id="r-score" style="border-color: var(--primary); color: var(--primary);">—</div>
+                  <span class="badge-risk" id="r-risk">—</span>
+                </div>
+
+                <div class="prediction-details">
+                  <div style="margin-bottom: 10px;">
+                    <small style="color: var(--text-muted); display:block;">Arquétipo Identificado:</small>
+                    <strong id="r-arch" style="font-size: 1.1rem; color: var(--text-main);">—</strong>
+                  </div>
+                  <p id="r-advice" style="font-size: 0.85rem; color: var(--text-muted); margin: 0;"></p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+  </div><!-- end training-layout -->
 </div>
 
 <div id="isolation-modal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="iso-modal-title">
@@ -152,7 +189,48 @@
     const box = document.getElementById('alert-box');
     App.hideAlert(box);
 
-    const isoVal = parseInt(form.isolation_index.value);
+    const workHours = parseFloat(form.work_hours.value);
+    const screenTime = parseFloat(form.screen_time_hours.value);
+    const meetingsCount = parseInt(form.meetings_count.value, 10);
+    const appSwitches = parseInt(form.app_switches.value, 10);
+    const breaksTaken = parseInt(form.breaks_taken.value, 10);
+    const sleepHours = parseFloat(form.sleep_hours.value);
+    const fatigueScore = parseFloat(form.fatigue_score.value);
+    const isoVal = parseInt(form.isolation_index.value, 10);
+    const taskCompletion = parseInt(form.task_completion.value, 10);
+
+    if (Number.isNaN(workHours) || workHours < 0.5 || workHours > 18) {
+      App.showAlert(box, 'Horas de trabalho precisa estar entre 0,5 e 18.');
+      return;
+    }
+    if (Number.isNaN(screenTime) || screenTime > workHours) {
+      App.showAlert(box, 'Tempo de tela não pode ser maior que horas de trabalho.');
+      return;
+    }
+    if (Number.isNaN(meetingsCount) || meetingsCount < 0 || meetingsCount > 16) {
+      App.showAlert(box, 'Reuniões deve estar entre 0 e 16.');
+      return;
+    }
+    if (Number.isNaN(appSwitches) || appSwitches < 0 || appSwitches > 10) {
+      App.showAlert(box, 'Troca de apps deve estar entre 0 e 10.');
+      return;
+    }
+    if (Number.isNaN(breaksTaken) || breaksTaken < 0 || breaksTaken > 16) {
+      App.showAlert(box, 'Pausas no dia deve estar entre 0 e 16.');
+      return;
+    }
+    if (Number.isNaN(sleepHours) || sleepHours < 2 || sleepHours > 10) {
+      App.showAlert(box, 'Horas de sono deve estar entre 2 e 10.');
+      return;
+    }
+    if (Number.isNaN(fatigueScore) || fatigueScore < 0 || fatigueScore > 10) {
+      App.showAlert(box, 'Fadiga deve estar entre 0 e 10.');
+      return;
+    }
+    if (Number.isNaN(taskCompletion) || taskCompletion < 0 || taskCompletion > 100) {
+      App.showAlert(box, 'Conclusão de tarefas deve estar entre 0 e 100.');
+      return;
+    }
     if (Number.isNaN(isoVal) || isoVal < 3 || isoVal > 9) {
       App.showAlert(box, 'Índice de isolamento deve estar entre 3 e 9.');
       return;
@@ -161,25 +239,56 @@
     const payload = {
       data_registro: form.data_registro.value,
       day_type: form.day_type.value,
-      work_hours: parseFloat(form.work_hours.value),
-      screen_time_hours: parseFloat(form.screen_time_hours.value),
-      meetings_count: parseInt(form.meetings_count.value),
-      app_switches: parseInt(form.app_switches.value),
-      breaks_taken: parseInt(form.breaks_taken.value),
+      work_hours: workHours,
+      screen_time_hours: screenTime,
+      meetings_count: meetingsCount,
+      app_switches: appSwitches,
+      breaks_taken: breaksTaken,
       after_hours_work: form.after_hours_work.value === 'true',
-      sleep_hours: parseFloat(form.sleep_hours.value),
-      fatigue_score: parseFloat(form.fatigue_score.value),
+      sleep_hours: sleepHours,
+      fatigue_score: fatigueScore,
       isolation_index: isoVal,
-      task_completion: parseInt(form.task_completion.value),
+      task_completion: taskCompletion,
     };
 
     try {
       const res = await App.api('/burnout-logs', { method: 'POST', body: JSON.stringify(payload) });
-      document.getElementById('r-score').textContent = res.burnoutScore;
-      document.getElementById('r-risk').innerHTML = `<span class="badge badge-${res.burnoutRisk.toLowerCase()}">${res.burnoutRisk}</span>`;
-      document.getElementById('r-arch').textContent = res.archetype;
+
+      const scoreCircle = document.getElementById('r-score');
+      const riskLabel = document.getElementById('r-risk');
+      const archName = document.getElementById('r-arch');
+      const adviceEl = document.getElementById('r-advice');
+
+      if (scoreCircle) {
+        scoreCircle.textContent = res.burnoutScore;
+        const riskColor = res.burnoutRisk === 'High' ? 'var(--danger)' :
+                          res.burnoutRisk === 'Medium' ? 'var(--warning)' : 'var(--success)';
+        scoreCircle.style.borderColor = riskColor;
+        scoreCircle.style.color = riskColor;
+      }
+
+      if (riskLabel) {
+        const riskText = res.burnoutRisk === 'High' ? 'Risco Crítico' :
+                         res.burnoutRisk === 'Medium' ? 'Risco Moderado' : 'Risco Baixo';
+        const riskClass = 'badge-risk risk-' + res.burnoutRisk.toLowerCase();
+        riskLabel.className = riskClass;
+        riskLabel.textContent = riskText;
+      }
+
+      if (archName) archName.textContent = res.archetype || '—';
+
+      if (adviceEl) {
+        const adviceMap = {
+          Sobrecarregado: 'Alta carga horária com pouco descanso. Recomenda-se reduzir horas extras e aumentar pausas.',
+          Isolado: 'Baixo engajamento social detectado. Recomenda-se maior interação com a equipe.',
+          Equilibrado: 'Perfil saudável. Continue mantendo o equilíbrio entre trabalho e descanso.',
+          AltaAutonomia: 'Boa autonomia, mas atenção ao isolamento. Mantenha conexões regulares com colegas.',
+        };
+        adviceEl.innerHTML = '<i class="fas fa-info-circle"></i> ' + (adviceMap[res.archetype] || 'Análise concluída. Verifique os indicadores detalhados.');
+      }
+
       document.getElementById('result').classList.remove('hidden');
-      App.showAlert(box, 'Registro salvo com sucesso!', 'success');
+      App.showAlert(box, res.modelUsed ? 'Registro salvo — predição via rede neural!' : 'Registro salvo — análise estática!', 'success');
     } catch (err) {
       if (err.status === 401) { window.location.href = '/login.html'; return; }
       App.showAlert(box, err.error || 'Erro ao enviar registro.');

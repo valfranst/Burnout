@@ -2,7 +2,7 @@
 
 const express = require('express');
 const pool = require('../db');
-const { analyzeLog } = require('../modelTraining');
+const { analyzeLog, predictWithModel, trainModel } = require('../modelTraining');
 
 const router = express.Router();
 
@@ -62,13 +62,34 @@ router.post('/', requireAuth, async (req, res) => {
     );
     const logId = logResult.rows[0].id;
 
-    // 2. Análise de IA: normalização + inferência
+    // 2. Análise de IA: tenta usar o modelo treinado; se não existir, treina com 200 registros
     const logData = {
       day_type, work_hours, screen_time_hours, meetings_count, app_switches,
       after_hours_work, sleep_hours, isolation_index, fatigue_score, breaks_taken,
       task_completion,
     };
-    const { normalized, burnoutScore, burnoutRisk, archetype } = analyzeLog(logData);
+
+    // Tenta predição via modelo treinado (retorna modelUsed: true se existir)
+    let result = predictWithModel(logData);
+
+    // Se não havia modelo treinado, treina com 200 registros do banco e tenta novamente
+    if (!result.modelUsed) {
+      const { rows: trainingRecords } = await client.query(
+        `SELECT day_type, work_hours, screen_time_hours, meetings_count,
+                app_switches, after_hours_work, sleep_hours, isolation_index,
+                fatigue_score, breaks_taken, task_completion,
+                burnout_score, burnout_risk, archetype
+         FROM burnout ORDER BY RANDOM() LIMIT 200`
+      );
+
+      if (trainingRecords.length >= 10) {
+        await trainModel(trainingRecords);
+        result = predictWithModel(logData);
+      }
+    }
+
+    const { normalized, burnoutScore, burnoutRisk, archetype } = result;
+    const modelUsed = result.modelUsed || false;
 
     // 3. Persistir dados normalizados + inferências em burnout
     // O embedding é calculado automaticamente pela trigger do banco
@@ -99,6 +120,7 @@ router.post('/', requireAuth, async (req, res) => {
       burnoutRisk,
       archetype,
       normalized,
+      modelUsed,
     });
   } catch (err) {
     await client.query('ROLLBACK');

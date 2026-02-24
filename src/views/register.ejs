@@ -1,6 +1,10 @@
 <div class="auth-wrapper">
   <div class="card auth-card">
     <h2>Criar conta</h2>
+    <p class="text-muted mb-2" style="font-size:.9rem;">
+      Informe seu nome, e-mail e senha para receber recomendações personalizadas de bem-estar e garantir acesso seguro ao painel da equipe.
+      Os dados ajudam o modelo a reconhecer seu perfil e evitar falsos positivos de burnout.
+    </p>
     <div id="alert-box"></div>
 
     <a href="/auth/google" class="btn btn-google" style="width:100%; justify-content:center;">
@@ -14,14 +18,17 @@
       <div class="form-group">
         <label for="name">Nome</label>
         <input type="text" id="name" name="name" placeholder="Seu nome">
+        <small class="text-muted" style="font-size:.75rem;">Use pelo menos 2 caracteres e evite siglas para facilitar a personalização.</small>
       </div>
       <div class="form-group">
         <label for="email">E-mail</label>
         <input type="email" id="email" name="email" required placeholder="seu@email.com">
+        <small class="text-muted" style="font-size:.75rem;">Informe o e-mail corporativo para garantir acesso ao dashboard.</small>
       </div>
       <div class="form-group">
         <label for="password">Senha</label>
         <input type="password" id="password" name="password" required minlength="6" placeholder="Mínimo 6 caracteres">
+        <small class="text-muted" style="font-size:.75rem;">Mínimo de 6 caracteres; use letras e números para fortalecer o acesso.</small>
       </div>
       <button type="submit" class="btn btn-primary" style="width:100%; justify-content:center;">Criar conta</button>
     </form>
@@ -38,13 +45,29 @@
     const form = e.target;
     const box = document.getElementById('alert-box');
     App.hideAlert(box);
+    const nameValue = form.name.value.trim();
+    const emailValue = form.email.value.trim();
+    const passwordValue = form.password.value;
+
+    if (nameValue.length < 2) {
+      App.showAlert(box, 'Informe um nome válido com ao menos 2 caracteres.');
+      return;
+    }
+    if (!/\S+@\S+\.\S+/.test(emailValue)) {
+      App.showAlert(box, 'Informe um e-mail válido com domínio e aroba.');
+      return;
+    }
+    if (passwordValue.length < 6) {
+      App.showAlert(box, 'A senha deve ter no mínimo 6 caracteres.');
+      return;
+    }
     try {
       await App.api('/auth/register', {
         method: 'POST',
         body: JSON.stringify({
-          name: form.name.value,
-          email: form.email.value,
-          password: form.password.value,
+          name: nameValue,
+          email: emailValue,
+          password: passwordValue,
         }),
       });
       App.showAlert(box, 'Conta criada! Redirecionando...', 'success');
