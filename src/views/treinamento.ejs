@@ -1,0 +1,224 @@
+<div class="container section">
+  <div style="max-width:640px; margin:0 auto;">
+    <h1 class="section-title">Treinamento de Modelo</h1>
+    <p class="text-muted mb-2">Informe as métricas e a quantidade de registros para treinar e comparar o modelo de burnout.</p>
+    <div id="alert-box"></div>
+
+    <!-- Result card (hidden initially) -->
+    <div id="result" class="card hidden mb-2" style="border-left:4px solid var(--primary);">
+      <h3>Resultado do Treinamento</h3>
+
+      <div id="training-stats">
+        <h4 style="margin:1rem 0 .5rem; font-size:.9rem; color:var(--text-muted);">Conjunto de Treinamento</h4>
+        <div class="stats-grid" style="margin-top:.5rem;">
+          <div class="stat-card"><div class="stat-value" id="r-total">—</div><div class="stat-label">Registros</div></div>
+          <div class="stat-card"><div class="stat-value" id="r-avg">—</div><div class="stat-label">Score Médio</div></div>
+        </div>
+        <div style="margin-top:.75rem;">
+          <strong style="font-size:.85rem;">Distribuição de Risco</strong>
+          <div id="r-risk-dist" class="stats-grid" style="margin-top:.4rem;"></div>
+        </div>
+        <div style="margin-top:.75rem;">
+          <strong style="font-size:.85rem;">Arquétipos</strong>
+          <div id="r-arch-dist" class="stats-grid" style="margin-top:.4rem;"></div>
+        </div>
+      </div>
+
+      <div id="prediction-section" class="hidden" style="margin-top:1.25rem; border-top:1px solid var(--border); padding-top:1rem;">
+        <h4 style="margin:0 0 .5rem; font-size:.9rem; color:var(--text-muted);">Resultado da Predição</h4>
+        <div class="stats-grid" style="margin-top:.5rem;">
+          <div class="stat-card"><div class="stat-value" id="p-score">—</div><div class="stat-label">Score</div></div>
+          <div class="stat-card"><div class="stat-value" id="p-risk">—</div><div class="stat-label">Risco</div></div>
+          <div class="stat-card"><div class="stat-value" id="p-arch">—</div><div class="stat-label">Arquétipo</div></div>
+        </div>
+      </div>
+    </div>
+
+    <form id="training-form" class="card">
+      <div class="form-group" style="margin-bottom:1rem;">
+        <label for="num_records">Quantidade de registros para comparação</label>
+        <input type="number" id="num_records" name="num_records" min="1" max="1000" required placeholder="Ex: 100">
+      </div>
+
+      <h3 style="margin:1rem 0 .5rem; font-size:.95rem;">Métricas Comportamentais</h3>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label for="work_hours">Horas de Trabalho</label>
+          <input type="number" id="work_hours" name="work_hours" min="0.5" max="18" step="0.5" required placeholder="Ex: 8">
+        </div>
+        <div class="form-group">
+          <label for="screen_time_hours">Tempo de Tela (h)</label>
+          <input type="number" id="screen_time_hours" name="screen_time_hours" min="0" max="18" step="0.5" required placeholder="Ex: 10">
+        </div>
+      </div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label for="meetings_count">Reuniões</label>
+          <input type="number" id="meetings_count" name="meetings_count" min="0" max="30" required placeholder="Ex: 4">
+        </div>
+        <div class="form-group">
+          <label for="app_switches">Troca de Apps</label>
+          <input type="number" id="app_switches" name="app_switches" min="0" max="500" required placeholder="Ex: 50">
+        </div>
+      </div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label for="breaks_taken">Pausas no Dia</label>
+          <input type="number" id="breaks_taken" name="breaks_taken" min="0" max="20" required placeholder="Ex: 3">
+        </div>
+        <div class="form-group">
+          <label for="after_hours_work">Trabalhou Após Expediente?</label>
+          <select id="after_hours_work" name="after_hours_work">
+            <option value="false">Não</option>
+            <option value="true">Sim</option>
+          </select>
+        </div>
+      </div>
+
+      <h3 style="margin:1rem 0 .5rem; font-size:.95rem;">Métricas Psicológicas</h3>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label for="sleep_hours">Horas de Sono</label>
+          <input type="number" id="sleep_hours" name="sleep_hours" min="0" max="12" step="0.5" required placeholder="Ex: 7">
+        </div>
+        <div class="form-group">
+          <label for="fatigue_score">Fadiga (0-10)</label>
+          <input type="number" id="fatigue_score" name="fatigue_score" min="0" max="10" step="0.5" required placeholder="Ex: 6">
+        </div>
+      </div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label for="isolation_index">Índice de Isolamento (3-9)
+            <button type="button" class="info-icon" id="isolation-info-btn" aria-label="Como preencher o índice de isolamento">i</button>
+          </label>
+          <input type="number" id="isolation_index" name="isolation_index" min="3" max="9" step="1" required placeholder="Ex: 5">
+        </div>
+        <div class="form-group">
+          <label for="task_completion">Conclusão de Tarefas (%)</label>
+          <input type="number" id="task_completion" name="task_completion" min="0" max="100" value="80" placeholder="Ex: 80">
+        </div>
+      </div>
+
+      <div class="form-row" style="margin-top:1rem; gap:.75rem;">
+        <button type="submit" data-action="train_and_run" class="btn btn-primary" style="flex:1; justify-content:center;">
+          Treinar e Executar
+        </button>
+        <button type="submit" data-action="train" class="btn btn-outline" style="flex:1; justify-content:center;">
+          Apenas Treinar
+        </button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<div id="isolation-modal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="iso-modal-title">
+  <div id="isolation-modal-overlay" class="modal-overlay"></div>
+  <div class="modal-dialog">
+    <h3 id="iso-modal-title">Índice de Isolamento</h3>
+    <p>Use 3 (baixo isolamento) até 9 (alto isolamento). Esta faixa segue a lógica da UCLA Loneliness Scale: valores maiores indicam mais sensação de solidão ou desconexão. Procure registrar como se sentiu na média do dia.</p>
+    <div class="modal-actions">
+      <button type="button" class="btn btn-outline" id="iso-modal-close">Entendi</button>
+    </div>
+  </div>
+</div>
+
+<script>
+  const isolationField = document.getElementById('isolation_index');
+  const isolationInfoBtn = document.getElementById('isolation-info-btn');
+  const isolationModal = document.getElementById('isolation-modal');
+  const isolationOverlay = document.getElementById('isolation-modal-overlay');
+  const isoModalClose = document.getElementById('iso-modal-close');
+
+  isolationField.addEventListener('input', () => {
+    const val = Number(isolationField.value);
+    if (Number.isNaN(val)) return;
+    isolationField.value = Math.min(9, Math.max(3, val));
+  });
+
+  const closeIsolationModal = () => isolationModal.classList.add('hidden');
+  if (isolationInfoBtn && isolationModal) isolationInfoBtn.addEventListener('click', () => isolationModal.classList.remove('hidden'));
+  if (isolationOverlay) isolationOverlay.addEventListener('click', closeIsolationModal);
+  if (isoModalClose) isoModalClose.addEventListener('click', closeIsolationModal);
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && isolationModal && !isolationModal.classList.contains('hidden')) closeIsolationModal();
+  });
+
+  document.getElementById('training-form').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const action = e.submitter?.dataset?.action || 'train';
+    const form = e.target;
+    const box = document.getElementById('alert-box');
+    App.hideAlert(box);
+
+    const isoVal = parseInt(form.isolation_index.value, 10);
+    if (Number.isNaN(isoVal) || isoVal < 3 || isoVal > 9) {
+      App.showAlert(box, 'Índice de isolamento deve estar entre 3 e 9.');
+      return;
+    }
+
+    const numRecords = parseInt(form.num_records.value, 10);
+    if (Number.isNaN(numRecords) || numRecords < 1 || numRecords > 1000) {
+      App.showAlert(box, 'Quantidade de registros deve estar entre 1 e 1000.');
+      return;
+    }
+
+    const payload = {
+      num_records: numRecords,
+      action,
+      work_hours: parseFloat(form.work_hours.value),
+      screen_time_hours: parseFloat(form.screen_time_hours.value),
+      meetings_count: parseInt(form.meetings_count.value, 10),
+      app_switches: parseInt(form.app_switches.value, 10),
+      breaks_taken: parseInt(form.breaks_taken.value, 10),
+      after_hours_work: form.after_hours_work.value === 'true',
+      sleep_hours: parseFloat(form.sleep_hours.value),
+      fatigue_score: parseFloat(form.fatigue_score.value),
+      isolation_index: isoVal,
+      task_completion: parseInt(form.task_completion.value, 10),
+    };
+
+    try {
+      const res = await App.api('/treinamento', { method: 'POST', body: JSON.stringify(payload) });
+
+      // Preenche stats do treinamento
+      document.getElementById('r-total').textContent = res.training.totalRecords;
+      document.getElementById('r-avg').textContent = res.training.avgBurnoutScore ?? '—';
+
+      // Distribuição de risco
+      const riskDist = res.training.riskDistribution;
+      document.getElementById('r-risk-dist').innerHTML = Object.entries(riskDist)
+        .map(([risk, count]) => `<div class="stat-card"><div class="stat-value">${count}</div><div class="stat-label"><span class="badge badge-${risk.toLowerCase()}">${risk}</span></div></div>`)
+        .join('');
+
+      // Arquétipos
+      const archDist = res.training.archetypeDistribution;
+      document.getElementById('r-arch-dist').innerHTML = Object.entries(archDist).length
+        ? Object.entries(archDist)
+            .sort((a, b) => b[1] - a[1])
+            .map(([arch, count]) => `<div class="stat-card"><div class="stat-value">${count}</div><div class="stat-label">${arch}</div></div>`)
+            .join('')
+        : '<span class="text-muted" style="font-size:.85rem;">Nenhum dado disponível</span>';
+
+      // Predição (se 'train_and_run')
+      const predSection = document.getElementById('prediction-section');
+      if (res.prediction) {
+        document.getElementById('p-score').textContent = res.prediction.burnoutScore;
+        document.getElementById('p-risk').innerHTML = `<span class="badge badge-${res.prediction.burnoutRisk.toLowerCase()}">${res.prediction.burnoutRisk}</span>`;
+        document.getElementById('p-arch').textContent = res.prediction.archetype;
+        predSection.classList.remove('hidden');
+      } else {
+        predSection.classList.add('hidden');
+      }
+
+      document.getElementById('result').classList.remove('hidden');
+      App.showAlert(box, 'Treinamento concluído com sucesso!', 'success');
+    } catch (err) {
+      App.showAlert(box, err.error || 'Erro ao executar o treinamento.');
+    }
+  });
+</script>

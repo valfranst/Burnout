@@ -16,6 +16,7 @@ const passport = require('./auth');
 const burnoutRouter = require('./routes/burnout');
 const dashboardRouter = require('./routes/dashboard');
 const publicRouter = require('./routes/public');
+const treinamentoRouter = require('./routes/treinamento');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -192,6 +193,12 @@ app.get(['/report.html'], (req, res) => res.render('layout', {
   body: 'report',
 }));
 
+app.get(['/treinamento', '/treinamento.html'], (req, res) => res.render('layout', {
+  title: 'Treinamento de Modelo — Burnout Analysis',
+  user: req.user || null,
+  body: 'treinamento',
+}));
+
 app.get(['/login', '/login.html'], (_req, res) => res.render('layout', {
   title: 'Login — Burnout Analysis',
   user: null,
@@ -207,6 +214,7 @@ app.get(['/register', '/register.html'], (_req, res) => res.render('layout', {
 app.use('/burnout-logs', apiLimiter, doubleCsrfProtection, burnoutRouter);
 app.use('/dashboard', apiLimiter, dashboardRouter);
 app.use('/report', apiLimiter, publicRouter);
+app.use('/treinamento', apiLimiter, doubleCsrfProtection, treinamentoRouter);
 
 // Silencia probe do Chrome DevTools / extensões
 app.get('/.well-known/appspecific/com.chrome.devtools.json', (_req, res) => res.json({}));
