@@ -92,14 +92,14 @@
     <div class="training-col-right">
       <div id="charts-section">
         <div class="card mb-2">
-          <h5 style="margin-bottom:.5rem;">Precisão do Modelo</h5>
-          <div style="position:relative; height:240px;">
+          <h5 class="section-title-accent" style="margin-bottom:.5rem;">Precisão do Modelo</h5>
+          <div class="chart-container chart-sm">
             <canvas id="chart-acc"></canvas>
           </div>
         </div>
         <div class="card">
-          <h5 style="margin-bottom:.5rem;">Erro de Treinamento</h5>
-          <div style="position:relative; height:240px;">
+          <h5 class="section-title-accent" style="margin-bottom:.5rem;">Erro de Treinamento</h5>
+          <div class="chart-container chart-sm">
             <canvas id="chart-loss"></canvas>
           </div>
         </div>
@@ -216,7 +216,6 @@
   </div>
 </div>
 
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script>
   let chartAcc = null;
   let chartLoss = null;
@@ -241,20 +240,8 @@
     if (e.key === 'Escape' && isolationModal && !isolationModal.classList.contains('hidden')) closeIsolationModal();
   });
 
-  async function ensureChartLib() {
-    if (window.Chart) return;
-    await new Promise((resolve, reject) => {
-      const s = document.createElement('script');
-      s.src = 'https://cdn.jsdelivr.net/npm/chart.js';
-      s.onload = resolve;
-      s.onerror = () => reject(new Error('Chart.js failed to load'));
-      document.head.appendChild(s);
-    });
-  }
-
   async function renderTrainingCharts(metrics) {
     if (!metrics) return;
-    await ensureChartLib();
 
     const labels = metrics.epochs || [];
     const accCtx = document.getElementById('chart-acc');
@@ -262,42 +249,18 @@
 
     if (!accCtx || !lossCtx) return;
 
-    if (chartAcc) chartAcc.destroy();
-    if (chartLoss) chartLoss.destroy();
+    chartAcc = Charts.destroy(chartAcc);
+    chartLoss = Charts.destroy(chartLoss);
 
-    chartAcc = new Chart(accCtx, {
-      type: 'line',
-      data: {
-        labels,
-        datasets: [
-          { label: 'Treino', data: metrics.trainAcc || [], borderColor: '#4f46e5', backgroundColor: 'rgba(79,70,229,.15)', tension: 0.3 },
-          { label: 'Validação', data: metrics.valAcc || [], borderColor: '#22c55e', backgroundColor: 'rgba(34,197,94,.12)', tension: 0.3 },
-        ],
-      },
-      options: {
-        responsive: true,
-        maintainAspectRatio: false,
-        plugins: { legend: { position: 'bottom' } },
-        scales: { y: { min: 0, max: 1, ticks: { stepSize: 0.1 } } },
-      },
-    });
+    chartAcc = Charts.line(accCtx, labels, [
+      { label: 'Treino',    data: metrics.trainAcc || [], borderColor: Charts.COLORS.primary },
+      { label: 'Validação', data: metrics.valAcc   || [], borderColor: Charts.COLORS.success },
+    ], { scales: { y: { min: 0, max: 1, ticks: { stepSize: 0.1 } } } });
 
-    chartLoss = new Chart(lossCtx, {
-      type: 'line',
-      data: {
-        labels,
-        datasets: [
-          { label: 'Treino', data: metrics.trainLoss || [], borderColor: '#f59e0b', backgroundColor: 'rgba(245,158,11,.15)', tension: 0.3 },
-          { label: 'Validação', data: metrics.valLoss || [], borderColor: '#ef4444', backgroundColor: 'rgba(239,68,68,.12)', tension: 0.3 },
-        ],
-      },
-      options: {
-        responsive: true,
-        maintainAspectRatio: false,
-        plugins: { legend: { position: 'bottom' } },
-        scales: { y: { min: 0, ticks: { stepSize: 0.1 } } },
-      },
-    });
+    chartLoss = Charts.line(lossCtx, labels, [
+      { label: 'Treino',    data: metrics.trainLoss || [], borderColor: Charts.COLORS.warning },
+      { label: 'Validação', data: metrics.valLoss   || [], borderColor: Charts.COLORS.danger  },
+    ]);
 
     document.getElementById('charts-section').classList.remove('hidden');
   }

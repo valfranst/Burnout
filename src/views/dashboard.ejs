@@ -1,55 +1,42 @@
 <div class="container section">
   <h1 class="section-title">Meu Dashboard</h1>
   <div id="alert-box"></div>
-  <div id="loading" class="text-center text-muted" style="padding:3rem;">Carregando dados...</div>
+  <div id="loading" class="text-center text-muted" style="padding:3rem;">
+    <span class="loading-dot">●</span> Carregando dados...
+  </div>
 
-  <div id="summary" class="stats-grid hidden">
-    <div class="card stat-card">
-      <div class="stat-value" id="s-total">—</div>
-      <div class="stat-label">Registros (90d)</div>
+  <div id="summary" class="stats-grid hidden"></div>
+
+  <div class="charts-row hidden" id="charts-row">
+    <div class="card fade-in-up">
+      <h3 class="section-title-accent">Distribuição de Risco</h3>
+      <div class="chart-container chart-sm">
+        <canvas id="chart-risk"></canvas>
+      </div>
     </div>
-    <div class="card stat-card">
-      <div class="stat-value" id="s-avg">—</div>
-      <div class="stat-label">Score Médio</div>
-    </div>
-    <div class="card stat-card">
-      <div class="stat-value" id="s-risk">—</div>
-      <div class="stat-label">Risco Dominante</div>
-    </div>
-    <div class="card stat-card">
-      <div class="stat-value" id="s-arch">—</div>
-      <div class="stat-label">Arquétipo</div>
+    <div class="card fade-in-up" style="animation-delay:.1s">
+      <h3 class="section-title-accent">Tendência Temporal</h3>
+      <p id="t-trend" class="text-muted" style="font-size:.82rem; margin-bottom:.25rem;"></p>
+      <div class="chart-container chart-sm">
+        <canvas id="chart-trend"></canvas>
+      </div>
     </div>
   </div>
 
-  <div id="temporal-section" class="card hidden mb-2">
-    <h3 class="section-title">Tendência Temporal</h3>
-    <p id="t-trend" class="text-muted"></p>
-    <div class="table-wrapper">
-      <table id="t-table">
-        <thead><tr><th>Semana</th><th>Score Médio</th></tr></thead>
-        <tbody></tbody>
-      </table>
+  <div id="anomalies-section" class="card hidden mb-2 fade-in-up" style="animation-delay:.2s">
+    <h3 class="section-title-accent">Anomalias Detectadas</h3>
+    <div class="chart-container chart-sm">
+      <canvas id="chart-anomalies"></canvas>
     </div>
   </div>
 
-  <div id="anomalies-section" class="card hidden mb-2">
-    <h3 class="section-title">Anomalias Detectadas</h3>
-    <div class="table-wrapper">
-      <table id="a-table">
-        <thead><tr><th>Data</th><th>Fadiga</th><th>Z-Score</th></tr></thead>
-        <tbody></tbody>
-      </table>
-    </div>
-  </div>
-
-  <div id="interv-section" class="card hidden mb-2">
-    <h3 class="section-title">Eficácia de Pausas</h3>
+  <div id="interv-section" class="card hidden mb-2 fade-in-up" style="animation-delay:.25s">
+    <h3 class="section-title-accent">Eficácia de Pausas</h3>
     <p id="i-text" class="text-muted"></p>
   </div>
 
-  <div id="records-section" class="card hidden mb-2">
-    <h3 class="section-title">Últimos Registros</h3>
+  <div id="records-section" class="card hidden mb-2 fade-in-up" style="animation-delay:.3s">
+    <h3 class="section-title-accent">Últimos Registros</h3>
     <div class="table-wrapper">
       <table id="r-table">
         <thead><tr><th>Data</th><th>Score</th><th>Risco</th><th>Arquétipo</th><th>Fadiga</th><th>Horas Trab.</th></tr></thead>
@@ -62,6 +49,10 @@
 <script>
   const riskBadge = (r) => `<span class="badge badge-${r.toLowerCase()}">${r}</span>`;
 
+  let chartRisk = null;
+  let chartTrend = null;
+  let chartAnomalies = null;
+
   async function loadDashboard() {
     const box = document.getElementById('alert-box');
     try {
@@ -69,30 +60,71 @@
       document.getElementById('loading').classList.add('hidden');
 
       const s = data.summary;
-      document.getElementById('s-total').textContent = s.totalRecords;
-      document.getElementById('s-avg').textContent = s.avgBurnoutScore ?? '—';
-      const dominant = Object.entries(s.riskDistribution).sort((a,b) => b[1]-a[1])[0];
-      document.getElementById('s-risk').innerHTML = dominant ? riskBadge(dominant[0]) : '—';
-      document.getElementById('s-arch').textContent = s.dominantArchetype || '—';
-      document.getElementById('summary').classList.remove('hidden');
 
-      if (data.temporal && data.temporal.weeklyAverages.length) {
-        const sec = document.getElementById('temporal-section');
-        const trendMap = { improving: '📉 Melhorando', stable: '➡️ Estável', worsening: '📈 Piorando' };
-        document.getElementById('t-trend').textContent = `Tendência: ${trendMap[data.temporal.trend] || data.temporal.trend} (delta: ${data.temporal.delta})`;
-        const tbody = sec.querySelector('tbody');
-        data.temporal.weeklyAverages.forEach(w => {
-          tbody.innerHTML += `<tr><td>${w.week}</td><td>${w.avg}</td></tr>`;
-        });
-        sec.classList.remove('hidden');
+      // Animated stat cards
+      const riskEntries = Object.entries(s.riskDistribution).sort((a, b) => b[1] - a[1]);
+      const dominant = riskEntries[0];
+      const summaryEl = document.getElementById('summary');
+      summaryEl.innerHTML = `
+        <div class="card stat-card">
+          <div class="stat-value" id="s-total">0</div>
+          <div class="stat-label">Registros (90d)</div>
+        </div>
+        <div class="card stat-card">
+          <div class="stat-value" id="s-avg">—</div>
+          <div class="stat-label">Score Médio</div>
+        </div>
+        <div class="card stat-card">
+          <div class="stat-value" id="s-risk">${dominant ? riskBadge(dominant[0]) : '—'}</div>
+          <div class="stat-label">Risco Dominante</div>
+        </div>
+        <div class="card stat-card">
+          <div class="stat-value" id="s-arch">${s.dominantArchetype || '—'}</div>
+          <div class="stat-label">Arquétipo</div>
+        </div>`;
+      summaryEl.classList.remove('hidden');
+
+      Charts.animateCounter(document.getElementById('s-total'), s.totalRecords);
+      document.getElementById('s-avg').textContent = s.avgBurnoutScore ?? '—';
+
+      // Risk distribution doughnut chart
+      if (riskEntries.length) {
+        const chartsRow = document.getElementById('charts-row');
+        chartsRow.classList.remove('hidden');
+        chartRisk = Charts.destroy(chartRisk);
+        chartRisk = Charts.doughnut(
+          document.getElementById('chart-risk'),
+          riskEntries.map(([k]) => k),
+          riskEntries.map(([, v]) => v),
+          [Charts.COLORS.success, Charts.COLORS.warning, Charts.COLORS.danger]
+        );
       }
 
+      // Temporal trend line chart
+      if (data.temporal && data.temporal.weeklyAverages.length) {
+        const trendMap = { improving: '📉 Melhorando', stable: '➡️ Estável', worsening: '📈 Piorando' };
+        document.getElementById('t-trend').textContent =
+          `Tendência: ${trendMap[data.temporal.trend] || data.temporal.trend} (delta: ${data.temporal.delta})`;
+        chartTrend = Charts.destroy(chartTrend);
+        chartTrend = Charts.line(
+          document.getElementById('chart-trend'),
+          data.temporal.weeklyAverages.map(w => w.week),
+          [{ label: 'Score Médio', data: data.temporal.weeklyAverages.map(w => w.avg), borderColor: Charts.COLORS.primary }]
+        );
+        document.getElementById('charts-row').classList.remove('hidden');
+      }
+
+      // Anomalies bar chart
       if (data.anomalies && data.anomalies.length) {
         const sec = document.getElementById('anomalies-section');
-        const tbody = sec.querySelector('tbody');
-        data.anomalies.forEach(a => {
-          tbody.innerHTML += `<tr><td>${a.created_at}</td><td>${a.fatigue_score}</td><td>${a.zscore}</td></tr>`;
-        });
+        chartAnomalies = Charts.destroy(chartAnomalies);
+        chartAnomalies = Charts.bar(
+          document.getElementById('chart-anomalies'),
+          data.anomalies.map(a => (a.created_at || '').slice(0, 10)),
+          data.anomalies.map(a => a.fatigue_score),
+          'Fadiga',
+          Charts.COLORS.danger
+        );
         sec.classList.remove('hidden');
       }
 
