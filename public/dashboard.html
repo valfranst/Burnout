@@ -4,111 +4,164 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Dashboard — Burnout Analysis</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
   <link rel="stylesheet" href="/css/style.css">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
 </head>
 <body>
-  <nav class="navbar">
-    <div class="container">
-      <a href="/" class="navbar-brand">🔥 Burnout Analysis</a>
-      <!-- Links para visitante -->
-      <div id="nav-guest" class="navbar-links">
-        <a href="/report.html">Relatório Público</a>
-        <a href="/login.html" class="btn btn-outline">Entrar</a>
-        <a href="/register.html" class="btn btn-primary">Cadastrar</a>
+  <button type="button" id="sidebar-toggle" class="sidebar-toggle floating" aria-label="Expandir ou recolher o menu" aria-pressed="false">
+    <span class="toggle-bar"></span>
+    <span class="toggle-bar"></span>
+    <span class="toggle-bar"></span>
+  </button>
+
+  <div class="layout">
+    <nav class="sidebar" id="sidebar">
+      <div class="sidebar-top">
+        <a href="/" class="navbar-brand">
+          <span class="brand-line">Burnout</span>
+          <span class="brand-line">Monitoramento</span>
+          <span class="brand-line">e Prevenção</span>
+        </a>
       </div>
-      <!-- Links para usuário logado -->
-      <div id="nav-user" class="navbar-links hidden">
-        <a href="/dashboard.html">Dashboard</a>
-        <a href="/log.html">Novo Registro</a>
-        <a href="/report.html">Relatório</a>
-        <div class="user-avatar-wrapper">
-          <img id="nav-user-avatar" class="user-avatar" src="" alt="avatar">
-          <div class="user-card">
-            <img id="card-avatar" class="user-card-avatar" src="" alt="avatar">
-            <strong id="card-name"></strong>
+
+      <div id="nav-user" class="sidebar-section hidden">
+        <div class="user-panel">
+          <img id="nav-user-avatar" class="user-avatar lg" src="" alt="avatar">
+          <div class="user-details">
+            <strong id="card-name">Usuário</strong>
             <span id="card-email" class="text-muted"></span>
-            <button id="btn-logout" class="btn btn-outline" style="font-size:.8rem;width:100%;margin-top:.5rem;">Sair</button>
+          </div>
+          <img id="card-avatar" class="user-avatar hidden" src="" alt="avatar" aria-hidden="true">
+          <button id="btn-logout" class="btn btn-outline btn-compact">Sair</button>
+        </div>
+        <div class="menu-list">
+          <a href="/dashboard.html" class="menu-item active">
+            <span class="menu-icon" aria-hidden="true"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="8" height="8"></rect><rect x="13" y="3" width="8" height="5"></rect><rect x="13" y="10" width="8" height="11"></rect><rect x="3" y="13" width="8" height="8"></rect></svg></span>
+            <span class="menu-label">Meu Dashboard</span>
+          </a>
+          <a href="/log" class="menu-item">
+            <span class="menu-icon" aria-hidden="true"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 2h9l5 5v13a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2z"></path><path d="M14 2v6h6"></path><path d="M9 14h6"></path><path d="M12 11v6"></path></svg></span>
+            <span class="menu-label">Registrar</span>
+          </a>
+          <a href="/report.html" class="menu-item">
+            <span class="menu-icon" aria-hidden="true"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="4" y1="19" x2="20" y2="19"></line><rect x="6" y="11" width="3" height="8"></rect><rect x="11" y="6" width="3" height="13"></rect><rect x="16" y="9" width="3" height="10"></rect></svg></span>
+            <span class="menu-label">Relatório Público</span>
+          </a>
+          <a href="/treinamento" class="menu-item">
+            <span class="menu-icon" aria-hidden="true"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20z"></path><path d="M12 6v6l4 2"></path></svg></span>
+            <span class="menu-label">Treinamento & Modelo</span>
+          </a>
+        </div>
+      </div>
+
+      <div id="nav-guest" class="sidebar-section">
+        <div class="menu-list">
+          <a href="/report.html" class="menu-item">
+            <span class="menu-icon" aria-hidden="true"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="4" y1="19" x2="20" y2="19"></line><rect x="6" y="11" width="3" height="8"></rect><rect x="11" y="6" width="3" height="13"></rect><rect x="16" y="9" width="3" height="10"></rect></svg></span>
+            <span class="menu-label">Relatório Público</span>
+          </a>
+          <a href="/treinamento" class="menu-item">
+            <span class="menu-icon" aria-hidden="true"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20z"></path><path d="M12 6v6l4 2"></path></svg></span>
+            <span class="menu-label">Treinamento de Modelo</span>
+          </a>
+          <a href="/login.html" class="menu-item">
+            <span class="menu-icon" aria-hidden="true"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"></path><polyline points="10 17 15 12 10 7"></polyline><line x1="15" y1="12" x2="3" y2="12"></line></svg></span>
+            <span class="menu-label">Entrar</span>
+          </a>
+          <a href="/register.html" class="menu-item highlight">
+            <span class="menu-icon" aria-hidden="true"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="7" r="4"></circle><path d="M5.5 21a7.5 7.5 0 0 1 13 0"></path><line x1="12" y1="10" x2="12" y2="18"></line><line x1="8" y1="14" x2="16" y2="14"></line></svg></span>
+            <span class="menu-label">Cadastrar</span>
+          </a>
+        </div>
+      </div>
+    </nav>
+
+    <script src="/js/app.js"></script>
+    <script src="/js/charts.js"></script>
+
+    <main class="main-content">
+      <div class="container section">
+        <h1 class="section-title">Meu Dashboard</h1>
+        <div id="alert-box"></div>
+        <div id="loading" class="text-center text-muted" style="padding:3rem;">
+          <span class="loading-dot">●</span> Carregando dados...
+        </div>
+
+        <div id="summary" class="stats-grid hidden"></div>
+
+        <div class="charts-row hidden" id="charts-row">
+          <div class="card fade-in-up">
+            <h3 class="section-title-accent">Distribuição de Risco</h3>
+            <div class="chart-container chart-sm">
+              <canvas id="chart-risk"></canvas>
+            </div>
+          </div>
+          <div class="card fade-in-up" style="animation-delay:.1s">
+            <h3 class="section-title-accent">Tendência Temporal</h3>
+            <p id="t-trend" class="text-muted" style="font-size:.82rem; margin-bottom:.25rem;"></p>
+            <div class="chart-container chart-sm">
+              <canvas id="chart-trend"></canvas>
+            </div>
+          </div>
+        </div>
+
+        <div id="anomalies-section" class="card hidden mb-2 fade-in-up" style="animation-delay:.2s">
+          <h3 class="section-title-accent">Anomalias Detectadas</h3>
+          <div class="chart-container chart-sm">
+            <canvas id="chart-anomalies"></canvas>
+          </div>
+        </div>
+
+        <div id="interv-section" class="card hidden mb-2 fade-in-up" style="animation-delay:.25s">
+          <h3 class="section-title-accent">Eficácia de Pausas</h3>
+          <p id="i-text" class="text-muted"></p>
+        </div>
+
+        <div id="records-section" class="card hidden mb-2 fade-in-up" style="animation-delay:.3s">
+          <h3 class="section-title-accent">Últimos Registros</h3>
+          <div class="table-wrapper">
+            <table id="r-table">
+              <thead><tr><th>Data</th><th>Score</th><th>Risco</th><th>Arquétipo</th><th>Fadiga</th><th>Horas Trab.</th></tr></thead>
+              <tbody></tbody>
+            </table>
           </div>
         </div>
       </div>
-    </div>
-  </nav>
-
-  <div class="container section">
-    <h1 class="section-title">Meu Dashboard</h1>
-    <div id="alert-box"></div>
-    <div id="loading" class="text-center text-muted" style="padding:3rem;">Carregando dados...</div>
-
-    <!-- Summary cards -->
-    <div id="summary" class="stats-grid hidden">
-      <div class="card stat-card">
-        <div class="stat-value" id="s-total">—</div>
-        <div class="stat-label">Registros (90d)</div>
-      </div>
-      <div class="card stat-card">
-        <div class="stat-value" id="s-avg">—</div>
-        <div class="stat-label">Score Médio</div>
-      </div>
-      <div class="card stat-card">
-        <div class="stat-value" id="s-risk">—</div>
-        <div class="stat-label">Risco Dominante</div>
-      </div>
-      <div class="card stat-card">
-        <div class="stat-value" id="s-arch">—</div>
-        <div class="stat-label">Arquétipo</div>
-      </div>
-    </div>
-
-    <!-- Temporal trend -->
-    <div id="temporal-section" class="card hidden mb-2">
-      <h3 class="section-title">Tendência Temporal</h3>
-      <p id="t-trend" class="text-muted"></p>
-      <div class="table-wrapper">
-        <table id="t-table">
-          <thead><tr><th>Semana</th><th>Score Médio</th></tr></thead>
-          <tbody></tbody>
-        </table>
-      </div>
-    </div>
-
-    <!-- Anomalies -->
-    <div id="anomalies-section" class="card hidden mb-2">
-      <h3 class="section-title">Anomalias Detectadas</h3>
-      <div class="table-wrapper">
-        <table id="a-table">
-          <thead><tr><th>Data</th><th>Fadiga</th><th>Z-Score</th></tr></thead>
-          <tbody></tbody>
-        </table>
-      </div>
-    </div>
-
-    <!-- Interventions -->
-    <div id="interv-section" class="card hidden mb-2">
-      <h3 class="section-title">Eficácia de Pausas</h3>
-      <p id="i-text" class="text-muted"></p>
-    </div>
-
-    <!-- Recent records -->
-    <div id="records-section" class="card hidden mb-2">
-      <h3 class="section-title">Últimos Registros</h3>
-      <div class="table-wrapper">
-        <table id="r-table">
-          <thead><tr><th>Data</th><th>Score</th><th>Risco</th><th>Arquétipo</th><th>Fadiga</th><th>Horas Trab.</th></tr></thead>
-          <tbody></tbody>
-        </table>
-      </div>
-    </div>
+    </main>
   </div>
 
-  <footer class="footer">
+  <footer class="footer app-footer">
     <div class="container">
-      <p>Burnout Analysis System &copy; 2026</p>
+      <p>Burnout Monitoramento e Prevenção &copy; 2026 — Dados iniciais: <a href="https://www.kaggle.com/datasets/aryanmdev/remote-work-burnout-and-social-isolation-2026" target="_blank" rel="noopener">Kaggle Dataset</a></p>
     </div>
   </footer>
 
-  <script src="/js/app.js"></script>
+  <script>
+    (function() {
+      const sidebar = document.getElementById('sidebar');
+      const sidebarToggle = document.getElementById('sidebar-toggle');
+      const applySidebarState = (collapsed) => {
+        if (!sidebar) return;
+        sidebar.classList.toggle('collapsed', collapsed);
+        if (sidebarToggle) sidebarToggle.setAttribute('aria-pressed', collapsed ? 'true' : 'false');
+        if (sidebarToggle) sidebarToggle.setAttribute('aria-label', collapsed ? 'Expandir o menu' : 'Recolher o menu');
+      };
+      applySidebarState(localStorage.getItem('sidebarCollapsed') === 'true');
+      if (sidebarToggle) {
+        sidebarToggle.addEventListener('click', () => {
+          const nextState = !sidebar.classList.contains('collapsed');
+          applySidebarState(nextState);
+          localStorage.setItem('sidebarCollapsed', String(nextState));
+        });
+      }
+    })();
+  </script>
+
   <script>
     const riskBadge = (r) => `<span class="badge badge-${r.toLowerCase()}">${r}</span>`;
+    let chartRisk = null, chartTrend = null, chartAnomalies = null;
 
     async function loadDashboard() {
       const box = document.getElementById('alert-box');
@@ -116,66 +169,97 @@
         const data = await App.api('/dashboard');
         document.getElementById('loading').classList.add('hidden');
 
-        // Summary
         const s = data.summary;
-        document.getElementById('s-total').textContent = s.totalRecords;
-        document.getElementById('s-avg').textContent = s.avgBurnoutScore ?? '—';
-        const dominant = Object.entries(s.riskDistribution).sort((a,b) => b[1]-a[1])[0];
-        document.getElementById('s-risk').innerHTML = dominant ? riskBadge(dominant[0]) : '—';
-        document.getElementById('s-arch').textContent = s.dominantArchetype || '—';
-        document.getElementById('summary').classList.remove('hidden');
+        const riskEntries = Object.entries(s.riskDistribution).sort((a, b) => b[1] - a[1]);
+        const dominant = riskEntries[0];
+        const summaryEl = document.getElementById('summary');
+        summaryEl.innerHTML = [
+          `<div class="card stat-card">
+            <div class="stat-value" id="s-total">0</div>
+            <div class="stat-label">Registros (90d)</div>
+          </div>`,
+          `<div class="card stat-card">
+            <div class="stat-value">${s.avgBurnoutScore ?? '—'}</div>
+            <div class="stat-label">Score Médio</div>
+          </div>`,
+          `<div class="card stat-card">
+            <div class="stat-value">${dominant ? riskBadge(dominant[0]) : '—'}</div>
+            <div class="stat-label">Risco Dominante</div>
+          </div>`,
+          `<div class="card stat-card">
+            <div class="stat-value">${s.dominantArchetype || '—'}</div>
+            <div class="stat-label">Arquétipo</div>
+          </div>`,
+        ].join('');
+        summaryEl.classList.remove('hidden');
+        Charts.animateCounter(document.getElementById('s-total'), s.totalRecords);
 
-        // Temporal
+        if (riskEntries.length) {
+          document.getElementById('charts-row').classList.remove('hidden');
+          chartRisk = Charts.destroy(chartRisk);
+          chartRisk = Charts.doughnut(
+            document.getElementById('chart-risk'),
+            riskEntries.map(([k]) => k),
+            riskEntries.map(([, v]) => v),
+            [Charts.COLORS.success, Charts.COLORS.warning, Charts.COLORS.danger]
+          );
+        }
+
         if (data.temporal && data.temporal.weeklyAverages.length) {
-          const sec = document.getElementById('temporal-section');
           const trendMap = { improving: '📉 Melhorando', stable: '➡️ Estável', worsening: '📈 Piorando' };
-          document.getElementById('t-trend').textContent = `Tendência: ${trendMap[data.temporal.trend] || data.temporal.trend} (delta: ${data.temporal.delta})`;
-          const tbody = sec.querySelector('tbody');
-          data.temporal.weeklyAverages.forEach(w => {
-            tbody.innerHTML += `<tr><td>${w.week}</td><td>${w.avg}</td></tr>`;
-          });
-          sec.classList.remove('hidden');
+          document.getElementById('t-trend').textContent =
+            `Tendência: ${trendMap[data.temporal.trend] || data.temporal.trend} (delta: ${data.temporal.delta})`;
+          chartTrend = Charts.destroy(chartTrend);
+          chartTrend = Charts.line(
+            document.getElementById('chart-trend'),
+            data.temporal.weeklyAverages.map(w => w.week),
+            [{ label: 'Score Médio', data: data.temporal.weeklyAverages.map(w => w.avg), borderColor: Charts.COLORS.primary }]
+          );
+          document.getElementById('charts-row').classList.remove('hidden');
         }
 
-        // Anomalies
         if (data.anomalies && data.anomalies.length) {
-          const sec = document.getElementById('anomalies-section');
-          const tbody = sec.querySelector('tbody');
-          data.anomalies.forEach(a => {
-            tbody.innerHTML += `<tr><td>${a.created_at}</td><td>${a.fatigue_score}</td><td>${a.zscore}</td></tr>`;
-          });
-          sec.classList.remove('hidden');
+          chartAnomalies = Charts.destroy(chartAnomalies);
+          chartAnomalies = Charts.bar(
+            document.getElementById('chart-anomalies'),
+            data.anomalies.map(anomaly => (anomaly.created_at || '').slice(0, 10)),
+            data.anomalies.map(anomaly => anomaly.fatigue_score),
+            'Fadiga',
+            Charts.COLORS.danger
+          );
+          document.getElementById('anomalies-section').classList.remove('hidden');
         }
 
-        // Interventions
         if (data.interventions) {
-          const i = data.interventions;
+          const itv = data.interventions;
           document.getElementById('i-text').textContent =
-            `Score médio após dia com muitas pausas: ${i.avgScoreAfterHighBreakDay} | ` +
-            `Após poucas pausas: ${i.avgScoreAfterLowBreakDay} | ` +
-            `Efeito: ${i.interventionEffect} — ${i.effective ? '✅ Pausas ajudam' : '⚠️ Sem efeito claro'}`;
+            `Score médio após dia com muitas pausas: ${itv.avgScoreAfterHighBreakDay} | ` +
+            `Após poucas pausas: ${itv.avgScoreAfterLowBreakDay} | ` +
+            `Efeito: ${itv.interventionEffect} — ${itv.effective ? '✅ Pausas ajudam' : '⚠️ Sem efeito claro'}`;
           document.getElementById('interv-section').classList.remove('hidden');
         }
 
-        // Records table (from temporal data or lastRecord)
-        if (data.temporal && data.temporal.weeklyAverages.length) {
+        if (data.latestRecords?.length) {
+          const tbody = document.querySelector('#r-table tbody');
+          data.latestRecords.forEach(r => {
+            tbody.innerHTML += `<tr>
+              <td>${(r.created_at || '').slice(0, 10)}</td>
+              <td>${r.burnout_score}</td>
+              <td>${riskBadge(r.burnout_risk)}</td>
+              <td>${r.archetype || '—'}</td>
+              <td>${r.fatigue_score ?? '—'}</td>
+              <td>${r.work_hours ?? '—'}</td>
+            </tr>`;
+          });
           document.getElementById('records-section').classList.remove('hidden');
         }
 
       } catch (err) {
         document.getElementById('loading').classList.add('hidden');
-        if (err.status === 401) {
-          window.location.href = '/login.html';
-          return;
-        }
+        if (err.status === 401) { window.location.href = '/login.html'; return; }
         App.showAlert(box, err.error || 'Erro ao carregar dashboard.');
       }
     }
-
-    document.getElementById('btn-logout').addEventListener('click', async () => {
-      try { await App.api('/auth/logout', { method: 'POST' }); } catch {}
-      window.location.href = '/';
-    });
 
     loadDashboard();
   </script>
