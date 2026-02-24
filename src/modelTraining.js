@@ -392,6 +392,7 @@ async function configureNeuralNetAndTrain(trainData, valData, trainScores, valSc
     epochs,
     batchSize: 32,
     shuffle: true,
+    verbose: 0,
     validationData: valData ? [valData.xs, valData.ys] : undefined,
     callbacks: {
       onEpochEnd: (epoch, logs) => {

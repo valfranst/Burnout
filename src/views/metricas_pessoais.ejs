@@ -277,15 +277,7 @@
 
       if (archName) archName.textContent = res.archetype || '—';
 
-      if (adviceEl) {
-        const adviceMap = {
-          Sobrecarregado: 'Alta carga horária com pouco descanso. Recomenda-se reduzir horas extras e aumentar pausas.',
-          Isolado: 'Baixo engajamento social detectado. Recomenda-se maior interação com a equipe.',
-          Equilibrado: 'Perfil saudável. Continue mantendo o equilíbrio entre trabalho e descanso.',
-          AltaAutonomia: 'Boa autonomia, mas atenção ao isolamento. Mantenha conexões regulares com colegas.',
-        };
-        adviceEl.innerHTML = '<i class="fas fa-info-circle"></i> ' + (adviceMap[res.archetype] || 'Análise concluída. Verifique os indicadores detalhados.');
-      }
+      Recommendations.renderAdvice(adviceEl, res.archetype);
 
       document.getElementById('result').classList.remove('hidden');
       App.showAlert(box, res.modelUsed ? 'Registro salvo — predição via rede neural!' : 'Registro salvo — análise estática!', 'success');

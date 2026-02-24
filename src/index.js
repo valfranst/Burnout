@@ -175,10 +175,10 @@ app.get(['/', '/index.html'], (req, res) => res.render('layout', {
   body: 'index',
 }));
 
-app.get(['/log', '/log.html'], (req, res) => res.render('layout', {
+app.get(['/metricas_pessoais', '/metricas_pessoais.html', '/log', '/log.html'], (req, res) => res.render('layout', {
   title: 'Novo Registro — Burnout Analysis',
   user: req.user || null,
-  body: 'log',
+  body: 'metricas_pessoais',
 }));
 
 app.get(['/dashboard.html'], (req, res) => res.render('layout', {
