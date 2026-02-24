@@ -27,10 +27,14 @@ const Charts = (() => {
   };
 
   /* ---- Gradient fill helper ---- */
+  function _alphaHex(alpha) {
+    return Math.round(alpha * 255).toString(16).padStart(2, '0');
+  }
+
   function _gradient(ctx, hexColor, alpha1 = 0.35, alpha2 = 0.02) {
     const g = ctx.createLinearGradient(0, 0, 0, ctx.canvas.height || 300);
-    g.addColorStop(0, hexColor + Math.round(alpha1 * 255).toString(16).padStart(2, '0'));
-    g.addColorStop(1, hexColor + Math.round(alpha2 * 255).toString(16).padStart(2, '0'));
+    g.addColorStop(0, hexColor + _alphaHex(alpha1));
+    g.addColorStop(1, hexColor + _alphaHex(alpha2));
     return g;
   }
 
@@ -53,17 +57,17 @@ const Charts = (() => {
   function line(canvasEl, labels, datasets, opts = {}) {
     if (!window.Chart || !canvasEl) return null;
     const ctx = canvasEl.getContext('2d');
-    const processed = datasets.map((ds, i) => {
-      const color = ds.borderColor || PALETTE[i % PALETTE.length];
+    const processed = datasets.map((dataset, i) => {
+      const color = dataset.borderColor || PALETTE[i % PALETTE.length];
       return {
         fill: true,
         tension: 0.4,
         pointRadius: 4,
         pointHoverRadius: 7,
         borderWidth: 2.5,
-        ...ds,
+        ...dataset,
         borderColor: color,
-        backgroundColor: ds.backgroundColor || _gradient(ctx, color),
+        backgroundColor: dataset.backgroundColor || _gradient(ctx, color),
       };
     });
     return new Chart(canvasEl, {

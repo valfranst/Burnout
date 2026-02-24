@@ -82,8 +82,8 @@
         chartRisk = Charts.destroy(chartRisk);
         chartRisk = Charts.doughnut(
           document.getElementById('chart-risk'),
-          data.riskDistribution.map(r => `${r.burnout_risk} (${r.percentage}%)`),
-          data.riskDistribution.map(r => Number(r.total)),
+          data.riskDistribution.map(riskItem => `${riskItem.burnout_risk} (${riskItem.percentage}%)`),
+          data.riskDistribution.map(riskItem => Number(riskItem.total)),
           [Charts.COLORS.success, Charts.COLORS.warning, Charts.COLORS.danger]
         );
       }
@@ -94,8 +94,8 @@
         chartDow = Charts.destroy(chartDow);
         chartDow = Charts.bar(
           document.getElementById('chart-dow'),
-          data.burnoutByDayOfWeek.map(d => d.day_of_week.trim()),
-          data.burnoutByDayOfWeek.map(d => Number(d.avg_burnout_score)),
+          data.burnoutByDayOfWeek.map(day => day.day_of_week.trim()),
+          data.burnoutByDayOfWeek.map(day => Number(day.avg_burnout_score)),
           'Score Médio',
           Charts.COLORS.info
         );

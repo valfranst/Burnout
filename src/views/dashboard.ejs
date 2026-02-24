@@ -120,8 +120,8 @@
         chartAnomalies = Charts.destroy(chartAnomalies);
         chartAnomalies = Charts.bar(
           document.getElementById('chart-anomalies'),
-          data.anomalies.map(a => (a.created_at || '').slice(0, 10)),
-          data.anomalies.map(a => a.fatigue_score),
+          data.anomalies.map(anomaly => (anomaly.created_at || '').slice(0, 10)),
+          data.anomalies.map(anomaly => anomaly.fatigue_score),
           'Fadiga',
           Charts.COLORS.danger
         );
