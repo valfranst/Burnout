@@ -76,8 +76,7 @@ router.get('/', requireAuth, async (req, res) => {
        FROM burnout_logs bl
        LEFT JOIN burnout b ON b.log_id = bl.id
        WHERE bl.user_id = $1
-       ORDER BY bl.created_at DESC
-       LIMIT 10`,
+       ORDER BY bl.created_at DESC`,
       [userId]
     );
 

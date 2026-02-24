@@ -37,12 +37,41 @@
 
   <div id="records-section" class="card hidden mb-2 fade-in-up" style="animation-delay:.3s">
     <h3 class="section-title-accent">Últimos Registros</h3>
+
+    <div class="records-filters">
+      <div class="filter-group">
+        <label for="f-date-start">Data Início</label>
+        <input type="date" id="f-date-start">
+      </div>
+      <div class="filter-group">
+        <label for="f-date-end">Data Fim</label>
+        <input type="date" id="f-date-end">
+      </div>
+      <div class="filter-group">
+        <label for="f-risk">Risco</label>
+        <select id="f-risk">
+          <option value="">Todos</option>
+          <option value="Low">Low</option>
+          <option value="Medium">Medium</option>
+          <option value="High">High</option>
+        </select>
+      </div>
+      <div class="filter-group">
+        <label for="f-arch">Arquétipo</label>
+        <select id="f-arch">
+          <option value="">Todos</option>
+        </select>
+      </div>
+    </div>
+
     <div class="table-wrapper">
       <table id="r-table">
         <thead><tr><th>Data</th><th>Score</th><th>Risco</th><th>Arquétipo</th><th>Fadiga</th><th>Horas Trab.</th></tr></thead>
         <tbody></tbody>
       </table>
     </div>
+
+    <div id="r-pagination" class="pagination-bar"></div>
   </div>
 </div>
 
@@ -138,17 +167,7 @@
       }
 
       if (data.latestRecords?.length) {
-        const tbody = document.querySelector('#r-table tbody');
-        data.latestRecords.forEach(r => {
-          tbody.innerHTML += `<tr>
-            <td>${(r.created_at || '').slice(0, 10)}</td>
-            <td>${r.burnout_score}</td>
-            <td>${riskBadge(r.burnout_risk)}</td>
-            <td>${r.archetype || '—'}</td>
-            <td>${r.fatigue_score ?? '—'}</td>
-            <td>${r.work_hours ?? '—'}</td>
-          </tr>`;
-        });
+        initRecordsGrid(data.latestRecords);
         document.getElementById('records-section').classList.remove('hidden');
       }
 
@@ -161,6 +180,97 @@
       App.showAlert(box, err.error || 'Erro ao carregar dashboard.');
     }
   }
+
+  /* ---- Records grid: filters + pagination ---- */
+  const PAGE_SIZE = 10;
+  let _allRecords = [];
+  let _filteredRecords = [];
+  let _currentPage = 1;
+
+  function initRecordsGrid(records) {
+    _allRecords = records;
+
+    // Populate archetype select with unique values
+    const archSelect = document.getElementById('f-arch');
+    const archetypes = [...new Set(records.map(r => r.archetype).filter(Boolean))].sort();
+    archetypes.forEach(a => {
+      const opt = document.createElement('option');
+      opt.value = a; opt.textContent = a;
+      archSelect.appendChild(opt);
+    });
+
+    // Bind filter events
+    document.getElementById('f-date-start').addEventListener('input', applyFilters);
+    document.getElementById('f-date-end').addEventListener('input', applyFilters);
+    document.getElementById('f-risk').addEventListener('change', applyFilters);
+    document.getElementById('f-arch').addEventListener('change', applyFilters);
+
+    applyFilters();
+  }
+
+  function applyFilters() {
+    const dateStart = document.getElementById('f-date-start').value;
+    const dateEnd   = document.getElementById('f-date-end').value;
+    const riskVal   = document.getElementById('f-risk').value;
+    const archVal   = document.getElementById('f-arch').value;
+
+    _filteredRecords = _allRecords.filter(r => {
+      const d = (r.created_at || '').slice(0, 10);
+      if (dateStart && d < dateStart) return false;
+      if (dateEnd   && d > dateEnd)   return false;
+      if (riskVal && r.burnout_risk !== riskVal) return false;
+      if (archVal && r.archetype !== archVal) return false;
+      return true;
+    });
+
+    _currentPage = 1;
+    renderRecordsPage();
+  }
+
+  function renderRecordsPage() {
+    const tbody = document.querySelector('#r-table tbody');
+    const total = _filteredRecords.length;
+    const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE));
+    if (_currentPage > totalPages) _currentPage = totalPages;
+
+    const start = (_currentPage - 1) * PAGE_SIZE;
+    const page  = _filteredRecords.slice(start, start + PAGE_SIZE);
+
+    const fmtDate = (d) => { const s = (d || '').slice(0, 10); if (!s) return '—'; const [y,m,dd] = s.split('-'); return `${dd}/${m}/${y}`; };
+
+    tbody.innerHTML = page.length
+      ? page.map(r => `<tr>
+            <td>${fmtDate(r.created_at)}</td>
+            <td>${r.burnout_score}</td>
+            <td>${riskBadge(r.burnout_risk)}</td>
+            <td>${r.archetype || '—'}</td>
+            <td>${r.fatigue_score ?? '—'}</td>
+            <td>${r.work_hours ?? '—'}</td>
+          </tr>`).join('')
+      : '<tr><td colspan="6" class="text-center text-muted" style="padding:1.5rem;">Nenhum registro encontrado.</td></tr>';
+
+    // Pagination controls
+    const paginationEl = document.getElementById('r-pagination');
+    if (totalPages <= 1) { paginationEl.innerHTML = ''; return; }
+
+    let html = `<span class="pg-info">Página ${_currentPage} de ${totalPages} (${total} registros)</span><span class="pg-buttons">`;
+    html += `<button class="pg-btn" ${_currentPage === 1 ? 'disabled' : ''} onclick="goPage(1)">&laquo;</button>`;
+    html += `<button class="pg-btn" ${_currentPage === 1 ? 'disabled' : ''} onclick="goPage(${_currentPage - 1})">&lsaquo;</button>`;
+
+    // Show at most 5 page buttons around current
+    const rangeStart = Math.max(1, _currentPage - 2);
+    const rangeEnd   = Math.min(totalPages, rangeStart + 4);
+    for (let p = rangeStart; p <= rangeEnd; p++) {
+      html += `<button class="pg-btn${p === _currentPage ? ' pg-active' : ''}" onclick="goPage(${p})">${p}</button>`;
+    }
+
+    html += `<button class="pg-btn" ${_currentPage === totalPages ? 'disabled' : ''} onclick="goPage(${_currentPage + 1})">&rsaquo;</button>`;
+    html += `<button class="pg-btn" ${_currentPage === totalPages ? 'disabled' : ''} onclick="goPage(${totalPages})">&raquo;</button>`;
+    html += '</span>';
+    paginationEl.innerHTML = html;
+  }
+
+  function goPage(p) { _currentPage = p; renderRecordsPage(); }
 
   loadDashboard();
 </script>

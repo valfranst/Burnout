@@ -3,6 +3,7 @@
 const express = require('express');
 const pool = require('../db');
 const { analyzeLog, predictWithModel, trainModel } = require('../modelTraining');
+const publicRouter = require('./public');
 
 const router = express.Router();
 
@@ -112,6 +113,9 @@ router.post('/', requireAuth, async (req, res) => {
     await client.query('UPDATE burnout_logs SET is_processed = TRUE WHERE id = $1', [logId]);
 
     await client.query('COMMIT');
+
+    // Invalidar cache do relatório público (dados agregados mudaram)
+    publicRouter.invalidateCache();
 
     return res.status(201).json({
       logId,

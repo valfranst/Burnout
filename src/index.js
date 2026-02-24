@@ -4,6 +4,7 @@ require('dotenv').config();
 
 const path = require('path');
 const express = require('express');
+const compression = require('compression');
 const session = require('express-session');
 const pgSession = require('connect-pg-simple')(session);
 const bcrypt = require('bcrypt');
@@ -47,6 +48,7 @@ const apiLimiter = rateLimit({
 // ------------------------------------------------------------
 // Middlewares
 // ------------------------------------------------------------
+app.use(compression());          // gzip/deflate em todas as respostas
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
