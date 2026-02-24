@@ -1,52 +1,43 @@
 <div class="container section">
-  <div style="max-width:640px; margin:0 auto;">
-    <h1 class="section-title">Treinamento de Modelo</h1>
-    <p class="text-muted mb-2">Informe as métricas e a quantidade de registros para treinar e comparar o modelo de burnout.</p>
-    <div id="alert-box"></div>
+  <h1 class="section-title">Treinamento de Modelo</h1>
+  <p class="text-muted mb-2">Informe as métricas e a quantidade de registros para treinar e comparar o modelo de burnout.</p>
+  <div id="alert-box"></div>
 
-    <!-- Result card (hidden initially) -->
-    <div id="result" class="card hidden mb-2" style="border-left:4px solid var(--primary);">
-      <h3>Resultado do Treinamento</h3>
+  <div class="training-layout">
+    <!-- Left column: result stats + form -->
+    <div class="training-col-left">
 
-      <div id="training-stats">
-        <h4 style="margin:1rem 0 .5rem; font-size:.9rem; color:var(--text-muted);">Conjunto de Treinamento</h4>
-        <div class="stats-grid" style="margin-top:.5rem;">
-          <div class="stat-card"><div class="stat-value" id="r-total">—</div><div class="stat-label">Registros</div></div>
-          <div class="stat-card"><div class="stat-value" id="r-avg">—</div><div class="stat-label">Score Médio</div></div>
+      <!-- Result card (hidden initially) -->
+      <div id="result" class="card hidden mb-2" style="border-left:4px solid var(--primary);">
+        <h3>Resultado do Treinamento</h3>
+
+        <div id="training-stats">
+          <h4 style="margin:1rem 0 .5rem; font-size:.9rem; color:var(--text-muted);">Conjunto de Treinamento</h4>
+          <div class="stats-grid" style="margin-top:.5rem;">
+            <div class="stat-card"><div class="stat-value" id="r-total">—</div><div class="stat-label">Registros</div></div>
+            <div class="stat-card"><div class="stat-value" id="r-avg">—</div><div class="stat-label">Score Médio</div></div>
+          </div>
+          <div style="margin-top:.75rem;">
+            <strong style="font-size:.85rem;">Distribuição de Risco</strong>
+            <div id="r-risk-dist" class="stats-grid" style="margin-top:.4rem;"></div>
+          </div>
+          <div style="margin-top:.75rem;">
+            <strong style="font-size:.85rem;">Arquétipos</strong>
+            <div id="r-arch-dist" class="stats-grid" style="margin-top:.4rem;"></div>
+          </div>
         </div>
-        <div style="margin-top:.75rem;">
-          <strong style="font-size:.85rem;">Distribuição de Risco</strong>
-          <div id="r-risk-dist" class="stats-grid" style="margin-top:.4rem;"></div>
-        </div>
-        <div style="margin-top:.75rem;">
-          <strong style="font-size:.85rem;">Arquétipos</strong>
-          <div id="r-arch-dist" class="stats-grid" style="margin-top:.4rem;"></div>
+
+        <div id="prediction-section" class="hidden" style="margin-top:1.25rem; border-top:1px solid var(--border); padding-top:1rem;">
+          <h4 style="margin:0 0 .5rem; font-size:.9rem; color:var(--text-muted);">Resultado da Predição</h4>
+          <div class="stats-grid" style="margin-top:.5rem;">
+            <div class="stat-card"><div class="stat-value" id="p-score">—</div><div class="stat-label">Score</div></div>
+            <div class="stat-card"><div class="stat-value" id="p-risk">—</div><div class="stat-label">Risco</div></div>
+            <div class="stat-card"><div class="stat-value" id="p-arch">—</div><div class="stat-label">Arquétipo</div></div>
+          </div>
         </div>
       </div>
 
-      <div id="prediction-section" class="hidden" style="margin-top:1.25rem; border-top:1px solid var(--border); padding-top:1rem;">
-        <h4 style="margin:0 0 .5rem; font-size:.9rem; color:var(--text-muted);">Resultado da Predição</h4>
-        <div class="stats-grid" style="margin-top:.5rem;">
-          <div class="stat-card"><div class="stat-value" id="p-score">—</div><div class="stat-label">Score</div></div>
-          <div class="stat-card"><div class="stat-value" id="p-risk">—</div><div class="stat-label">Risco</div></div>
-          <div class="stat-card"><div class="stat-value" id="p-arch">—</div><div class="stat-label">Arquétipo</div></div>
-        </div>
-      </div>
-
-      <div id="charts-section" class="hidden" style="margin-top:1.5rem; border-top:1px solid var(--border); padding-top:1rem;">
-        <h4 style="margin:0 0 .75rem; font-size:.9rem; color:var(--text-muted);">Desempenho do Modelo</h4>
-        <div class="card" style="margin-bottom:1rem;">
-          <h5 style="margin-bottom:.5rem;">Acurácia (treino vs. validação)</h5>
-          <canvas id="chart-acc" height="180"></canvas>
-        </div>
-        <div class="card">
-          <h5 style="margin-bottom:.5rem;">Erro / Loss (treino vs. validação)</h5>
-          <canvas id="chart-loss" height="180"></canvas>
-        </div>
-      </div>
-    </div>
-
-    <form id="training-form" class="card">
+      <form id="training-form" class="card">
       <div class="form-group" style="margin-bottom:1rem;">
         <label for="num_records">Quantidade de registros para comparação</label>
         <input type="number" id="num_records" name="num_records" min="1" max="1000" required placeholder="Ex: 100">
@@ -125,7 +116,27 @@
         </button>
       </div>
     </form>
-  </div>
+    </div><!-- end training-col-left -->
+
+    <!-- Right column: charts -->
+    <div class="training-col-right">
+      <div id="charts-section" class="hidden">
+        <h4 style="margin:0 0 .75rem; font-size:.9rem; color:var(--text-muted);">Desempenho do Modelo</h4>
+        <div class="card mb-2">
+          <h5 style="margin-bottom:.5rem;">Acurácia (treino vs. validação)</h5>
+          <div style="position:relative; height:180px;">
+            <canvas id="chart-acc"></canvas>
+          </div>
+        </div>
+        <div class="card">
+          <h5 style="margin-bottom:.5rem;">Erro / Loss (treino vs. validação)</h5>
+          <div style="position:relative; height:180px;">
+            <canvas id="chart-loss"></canvas>
+          </div>
+        </div>
+      </div>
+    </div><!-- end training-col-right -->
+  </div><!-- end training-layout -->
 </div>
 
 <div id="isolation-modal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="iso-modal-title">
@@ -199,6 +210,7 @@
       },
       options: {
         responsive: true,
+        maintainAspectRatio: false,
         plugins: { legend: { position: 'bottom' } },
         scales: { y: { min: 0, max: 1, ticks: { stepSize: 0.1 } } },
       },
@@ -215,6 +227,7 @@
       },
       options: {
         responsive: true,
+        maintainAspectRatio: false,
         plugins: { legend: { position: 'bottom' } },
         scales: { y: { min: 0, ticks: { stepSize: 0.1 } } },
       },
