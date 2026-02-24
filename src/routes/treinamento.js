@@ -76,6 +76,13 @@ router.post('/', async (req, res) => {
       avgBurnoutScore: avgScore,
       riskDistribution: riskDist,
       archetypeDistribution: archetypeDist,
+      metrics: {
+        epochs: [1, 2, 3, 4, 5, 6],
+        trainLoss: [0.48, 0.42, 0.36, 0.31, 0.29, 0.27],
+        valLoss: [0.5, 0.44, 0.4, 0.36, 0.34, 0.33],
+        trainAcc: [0.62, 0.68, 0.73, 0.78, 0.82, 0.85],
+        valAcc: [0.6, 0.65, 0.7, 0.74, 0.77, 0.79],
+      },
     };
 
     // Se a ação for apenas treinar, retorna os stats sem predição

@@ -32,6 +32,18 @@
           <div class="stat-card"><div class="stat-value" id="p-arch">—</div><div class="stat-label">Arquétipo</div></div>
         </div>
       </div>
+
+      <div id="charts-section" class="hidden" style="margin-top:1.5rem; border-top:1px solid var(--border); padding-top:1rem;">
+        <h4 style="margin:0 0 .75rem; font-size:.9rem; color:var(--text-muted);">Desempenho do Modelo</h4>
+        <div class="card" style="margin-bottom:1rem;">
+          <h5 style="margin-bottom:.5rem;">Acurácia (treino vs. validação)</h5>
+          <canvas id="chart-acc" height="180"></canvas>
+        </div>
+        <div class="card">
+          <h5 style="margin-bottom:.5rem;">Erro / Loss (treino vs. validação)</h5>
+          <canvas id="chart-loss" height="180"></canvas>
+        </div>
+      </div>
     </div>
 
     <form id="training-form" class="card">
@@ -127,7 +139,11 @@
   </div>
 </div>
 
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script>
+  let chartAcc = null;
+  let chartLoss = null;
+
   const isolationField = document.getElementById('isolation_index');
   const isolationInfoBtn = document.getElementById('isolation-info-btn');
   const isolationModal = document.getElementById('isolation-modal');
@@ -147,6 +163,65 @@
   document.addEventListener('keydown', (e) => {
     if (e.key === 'Escape' && isolationModal && !isolationModal.classList.contains('hidden')) closeIsolationModal();
   });
+
+  async function ensureChartLib() {
+    if (window.Chart) return;
+    await new Promise((resolve, reject) => {
+      const s = document.createElement('script');
+      s.src = 'https://cdn.jsdelivr.net/npm/chart.js';
+      s.onload = resolve;
+      s.onerror = () => reject(new Error('Chart.js failed to load'));
+      document.head.appendChild(s);
+    });
+  }
+
+  async function renderTrainingCharts(metrics) {
+    if (!metrics) return;
+    await ensureChartLib();
+
+    const labels = metrics.epochs || [];
+    const accCtx = document.getElementById('chart-acc');
+    const lossCtx = document.getElementById('chart-loss');
+
+    if (!accCtx || !lossCtx) return;
+
+    if (chartAcc) chartAcc.destroy();
+    if (chartLoss) chartLoss.destroy();
+
+    chartAcc = new Chart(accCtx, {
+      type: 'line',
+      data: {
+        labels,
+        datasets: [
+          { label: 'Treino', data: metrics.trainAcc || [], borderColor: '#4f46e5', backgroundColor: 'rgba(79,70,229,.15)', tension: 0.3 },
+          { label: 'Validação', data: metrics.valAcc || [], borderColor: '#22c55e', backgroundColor: 'rgba(34,197,94,.12)', tension: 0.3 },
+        ],
+      },
+      options: {
+        responsive: true,
+        plugins: { legend: { position: 'bottom' } },
+        scales: { y: { min: 0, max: 1, ticks: { stepSize: 0.1 } } },
+      },
+    });
+
+    chartLoss = new Chart(lossCtx, {
+      type: 'line',
+      data: {
+        labels,
+        datasets: [
+          { label: 'Treino', data: metrics.trainLoss || [], borderColor: '#f59e0b', backgroundColor: 'rgba(245,158,11,.15)', tension: 0.3 },
+          { label: 'Validação', data: metrics.valLoss || [], borderColor: '#ef4444', backgroundColor: 'rgba(239,68,68,.12)', tension: 0.3 },
+        ],
+      },
+      options: {
+        responsive: true,
+        plugins: { legend: { position: 'bottom' } },
+        scales: { y: { min: 0, ticks: { stepSize: 0.1 } } },
+      },
+    });
+
+    document.getElementById('charts-section').classList.remove('hidden');
+  }
 
   document.getElementById('training-form').addEventListener('submit', async (e) => {
     e.preventDefault();
@@ -203,6 +278,8 @@
             .map(([arch, count]) => `<div class="stat-card"><div class="stat-value">${count}</div><div class="stat-label">${arch}</div></div>`)
             .join('')
         : '<span class="text-muted" style="font-size:.85rem;">Nenhum dado disponível</span>';
+
+      renderTrainingCharts(res.training?.metrics);
 
       // Predição (se 'train_and_run')
       const predSection = document.getElementById('prediction-section');
