@@ -1,20 +1,29 @@
+<%
+  /** Gera avatar SVG placeholder a partir das iniciais do nome */
+  function serverDefaultAvatar(name) {
+    const initials = (name || '?').split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase();
+    const svg = '<svg xmlns="http://www.w3.org/2000/svg" width="80" height="80"><rect width="80" height="80" rx="40" fill="%2300d4ff"/><text x="50%25" y="54%25" dominant-baseline="middle" text-anchor="middle" fill="white" font-size="32" font-family="sans-serif">' + initials + '</text></svg>';
+    return 'data:image/svg+xml,' + svg;
+  }
+  const _avatarSrc = user?.picture_url || serverDefaultAvatar(user?.name || user?.email);
+%>
 <nav class="sidebar" id="sidebar">
   <div class="sidebar-top">
     <a href="/" class="navbar-brand">
       <span class="brand-line">Burnout</span>
-      <span class="brand-line">Monitoramento</span>
-      <span class="brand-line">e Prevenção</span>
     </a>
   </div>
-
+ 
   <div id="nav-user" class="sidebar-section <%= user ? '' : 'hidden' %>">
     <div class="user-panel">
-      <img id="nav-user-avatar" class="user-avatar lg" src="<%= user?.picture_url || '' %>" alt="avatar">
+      <img id="nav-user-avatar" class="user-avatar lg" src="<%= _avatarSrc %>" alt="avatar"
+           onerror="this.onerror=null;this.src='data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 width=%2280%22 height=%2280%22><rect width=%2280%22 height=%2280%22 rx=%2240%22 fill=%22%2300d4ff%22/><text x=%2250%25%22 y=%2254%25%22 dominant-baseline=%22middle%22 text-anchor=%22middle%22 fill=%22white%22 font-size=%2232%22 font-family=%22sans-serif%22>?</text></svg>';">
       <div class="user-details">
         <strong id="card-name"><%= user?.name || 'Usuário' %></strong>
         <span id="card-email" class="text-muted"><%= user?.email || '' %></span>
       </div>
-      <img id="card-avatar" class="user-avatar hidden" src="<%= user?.picture_url || '' %>" alt="avatar" aria-hidden="true">
+      <img id="card-avatar" class="user-avatar hidden" src="<%= _avatarSrc %>" alt="avatar" aria-hidden="true"
+           onerror="this.onerror=null;this.src='data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 width=%2280%22 height=%2280%22><rect width=%2280%22 height=%2280%22 rx=%2240%22 fill=%22%2300d4ff%22/><text x=%2250%25%22 y=%2254%25%22 dominant-baseline=%22middle%22 text-anchor=%22middle%22 fill=%22white%22 font-size=%2232%22 font-family=%22sans-serif%22>?</text></svg>';">
       <button id="btn-logout" class="btn btn-outline btn-compact">Sair</button>
     </div>
     <div class="menu-list">

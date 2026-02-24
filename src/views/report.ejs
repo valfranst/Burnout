@@ -112,15 +112,24 @@
         document.getElementById('trend-section').classList.remove('hidden');
       }
 
-      // Archetype distribution bar
+      // Archetype distribution bar — cores por gravidade
       if (data.archetypeDistribution?.length) {
+        const archColorMap = {
+          Equilibrado:    Charts.COLORS.success,  // verde — saudável
+          AltaAutonomia:  Charts.COLORS.info,     // azul  — atenção moderada
+          Isolado:        Charts.COLORS.warning,  // laranja — preocupante
+          Sobrecarregado: Charts.COLORS.danger,   // vermelho — grave
+        };
+        const archColors = data.archetypeDistribution.map(
+          a => archColorMap[a.archetype] || Charts.COLORS.muted
+        );
         chartArch = Charts.destroy(chartArch);
         chartArch = Charts.bar(
           document.getElementById('chart-arch'),
           data.archetypeDistribution.map(a => a.archetype),
           data.archetypeDistribution.map(a => Number(a.total)),
           null,
-          Charts.PALETTE
+          archColors
         );
         document.getElementById('arch-section').classList.remove('hidden');
       }

@@ -6,14 +6,38 @@ const LocalStrategy = require('passport-local').Strategy;
 const bcrypt = require('bcrypt');
 const pool = require('./db');
 
+// ---------------------------------------------------------------------------
+// Cache em memória para deserializeUser — evita consultas repetidas ao banco
+// TTL de 5 minutos; limpa entradas expiradas a cada 2 minutos.
+// ---------------------------------------------------------------------------
+const USER_CACHE_TTL_MS = 5 * 60 * 1000;
+const _userCache = new Map();
+
+setInterval(() => {
+  const now = Date.now();
+  for (const [key, entry] of _userCache) {
+    if (now - entry.ts > USER_CACHE_TTL_MS) _userCache.delete(key);
+  }
+}, 2 * 60 * 1000).unref();
+
+function _invalidateUserCache(id) {
+  _userCache.delete(id);
+}
+
 passport.serializeUser((user, done) => {
   done(null, user.id);
 });
 
 passport.deserializeUser(async (id, done) => {
   try {
+    const cached = _userCache.get(id);
+    if (cached && Date.now() - cached.ts < USER_CACHE_TTL_MS) {
+      return done(null, cached.user);
+    }
     const result = await pool.query('SELECT * FROM users WHERE id = $1', [id]);
-    done(null, result.rows[0] || false);
+    const user = result.rows[0] || false;
+    if (user) _userCache.set(id, { user, ts: Date.now() });
+    done(null, user);
   } catch (err) {
     done(err);
   }
@@ -33,8 +57,15 @@ passport.use(
         const existing = await pool.query('SELECT * FROM users WHERE google_id = $1', [profile.id]);
 
         if (existing.rows.length > 0) {
-          await pool.query('UPDATE users SET last_login = NOW() WHERE id = $1', [existing.rows[0].id]);
-          return done(null, existing.rows[0]);
+          const newPicture = profile.photos[0]?.value || null;
+          await pool.query(
+            'UPDATE users SET last_login = NOW(), picture_url = COALESCE($2, picture_url) WHERE id = $1',
+            [existing.rows[0].id, newPicture]
+          );
+          _invalidateUserCache(existing.rows[0].id);
+          // Retorna o usuário com a foto atualizada
+          const refreshed = await pool.query('SELECT * FROM users WHERE id = $1', [existing.rows[0].id]);
+          return done(null, refreshed.rows[0]);
         }
 
         const result = await pool.query(
@@ -69,6 +100,7 @@ passport.use(
         return done(null, false, { message: 'Credenciais inválidas.' });
       }
       await pool.query('UPDATE users SET last_login = NOW() WHERE id = $1', [user.id]);
+      _invalidateUserCache(user.id);
       return done(null, user);
     } catch (err) {
       return done(err);

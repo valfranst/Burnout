@@ -19,6 +19,14 @@ try {
   tf = require('@tensorflow/tfjs');
 }
 
+const path = require('path');
+const fs = require('fs');
+
+// Diretório para persistência do modelo e contexto
+const MODEL_DIR = path.join(__dirname, '..', '.model_cache');
+const MODEL_PATH = `file://${MODEL_DIR}`;
+const CONTEXT_PATH = path.join(MODEL_DIR, 'context.json');
+
 let _globalCtx = {};
 let _model = null;
 
@@ -357,13 +365,14 @@ function computeRiskAccuracy(model, xs, actualScoresNorm) {
 
 /**
  * Configura e treina a rede neural sequencial.
- * Arquitetura: 11 → 128 → 64 → 32 → 1 (sigmoid)
+ * Arquitetura: 11 → 32 (L2 + dropout) → 16 (L2 + dropout) → 1 (sigmoid)
  * Loss: meanSquaredError | Métrica: acurácia de classificação de risco
  *
  * Camadas:
- *  - Entrada (128 neurônios, ReLU): detecta padrões amplos nas 11 features
- *  - Oculta 1 (64, ReLU): comprime e combina padrões relevantes
- *  - Oculta 2 (32, ReLU): destila as informações mais importantes
+ *  - Entrada (32 neurônios, ReLU, L2): detecta padrões nas 11 features
+ *  - Dropout (0.3): regularização para evitar overfitting
+ *  - Oculta (16, ReLU, L2): comprime padrões relevantes
+ *  - Dropout (0.2): regularização adicional
  *  - Saída (1, sigmoid): score contínuo 0–1 (burnout normalizado)
  */
 async function configureNeuralNetAndTrain(trainData, valData, trainScores, valScores, epochs) {
@@ -372,13 +381,20 @@ async function configureNeuralNetAndTrain(trainData, valData, trainScores, valSc
   model.add(
     tf.layers.dense({
       inputShape: [trainData.inputDimension],
-      units: 128,
+      units: 32,
       activation: 'relu',
+      kernelRegularizer: tf.regularizers.l2({ l2: 0.01 }),
     })
   );
+  model.add(tf.layers.dropout({ rate: 0.3 }));
 
-  model.add(tf.layers.dense({ units: 64, activation: 'relu' }));
-  model.add(tf.layers.dense({ units: 32, activation: 'relu' }));
+  model.add(tf.layers.dense({
+    units: 16,
+    activation: 'relu',
+    kernelRegularizer: tf.regularizers.l2({ l2: 0.01 }),
+  }));
+  model.add(tf.layers.dropout({ rate: 0.2 }));
+
   model.add(tf.layers.dense({ units: 1, activation: 'sigmoid' }));
 
   model.compile({
@@ -454,10 +470,25 @@ async function trainModel(records, options = {}) {
   );
 
   // 5. Armazena modelo e contexto globalmente para predições futuras
+  // Descarta modelo anterior para evitar memory leak de tensores
+  if (_model && typeof _model.dispose === 'function') {
+    _model.dispose();
+  }
   _model = model;
   _globalCtx = context;
 
-  // 6. Limpeza de tensores
+  // 6. Persistência: salva modelo e contexto em disco para sobreviver a restarts
+  try {
+    if (!fs.existsSync(MODEL_DIR)) {
+      fs.mkdirSync(MODEL_DIR, { recursive: true });
+    }
+    await model.save(MODEL_PATH);
+    fs.writeFileSync(CONTEXT_PATH, JSON.stringify(context), 'utf8');
+  } catch (saveErr) {
+    console.error('Aviso: não foi possível persistir o modelo em disco:', saveErr.message);
+  }
+
+  // 7. Limpeza de tensores
   trainData.xs.dispose();
   trainData.ys.dispose();
   if (valData) {
@@ -469,10 +500,37 @@ async function trainModel(records, options = {}) {
 }
 
 /**
+ * Carrega modelo e contexto do disco (sobrevive a restarts do servidor).
+ */
+async function _loadModelFromDisk() {
+  try {
+    if (!fs.existsSync(CONTEXT_PATH)) return false;
+    const contextJson = fs.readFileSync(CONTEXT_PATH, 'utf8');
+    const context = JSON.parse(contextJson);
+    const model = await tf.loadLayersModel(`${MODEL_PATH}/model.json`);
+    if (_model && typeof _model.dispose === 'function') {
+      _model.dispose();
+    }
+    _model = model;
+    _globalCtx = context;
+    console.log('Modelo carregado do disco com sucesso.');
+    return true;
+  } catch (err) {
+    console.error('Aviso: não foi possível carregar modelo do disco:', err.message);
+    return false;
+  }
+}
+
+/**
  * Predição usando o modelo treinado.
- * Se não houver modelo treinado, usa a análise estática como fallback.
+ * Se não houver modelo treinado em memória, tenta carregar do disco.
+ * Se não houver modelo persistido, usa a análise estática como fallback.
  */
 function predictWithModel(logData) {
+  // Tenta carregar modelo do disco se não estiver em memória
+  if (!_model && fs.existsSync(CONTEXT_PATH)) {
+    _loadModelFromDisk().catch(() => {});
+  }
   if (!_model || !_globalCtx.mins) {
     return analyzeLog(logData);
   }

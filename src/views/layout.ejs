@@ -3,24 +3,35 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title><%= title || 'Burnout Monitoramento e Prevenção' %></title>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <title><%= locals.title ? locals.title + ' — ' + appName : appName %></title>
+  <link rel="icon" href="<%= favicon %>" type="image/png">
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
   <link rel="stylesheet" href="/css/style.css">
-  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
+  <% const _heavyPages = ['dashboard', 'treinamento', 'report', 'metricas_pessoais']; %>
+  <% if (_heavyPages.includes(body)) { %>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js" defer></script>
+  <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@4.22.0/dist/tf.min.js" defer></script>
+  <% } %>
 </head>
 <body>
   <button type="button" id="sidebar-toggle" class="sidebar-toggle floating" aria-label="Expandir ou recolher o menu" aria-pressed="false">
     <span class="toggle-bar"></span>
     <span class="toggle-bar"></span>
     <span class="toggle-bar"></span>
-  </button>
+  </button> 
 
   <div class="layout">
     <%- include('_navbar', { user, body }) %>
     <script src="/js/app.js"></script>
-    <script src="/js/recommendations.js"></script>
-    <script src="/js/charts.js"></script>
+    <% if (_heavyPages.includes(body)) { %>
+    <script src="/js/recommendations.js" defer></script>
+    <script src="/js/charts.js" defer></script>
+    <script src="/js/modelTraining.js" defer></script>
+    <% } %>
+    <% if (body === 'treinamento') { %>
+    <script src="/js/treinamento.js" defer></script>
+    <% } %>
     <main class="main-content">
       <%- include(body, { user }) %>
     </main>

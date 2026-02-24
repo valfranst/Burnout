@@ -5,25 +5,28 @@
    ============================================================ */
 const Charts = (() => {
   const COLORS = {
-    primary:  '#4f46e5',
-    success:  '#22c55e',
+    primary:  '#00d4ff',
+    success:  '#00ffa3',
     warning:  '#f59e0b',
     danger:   '#ef4444',
-    info:     '#06b6d4',
-    purple:   '#a855f7',
+    info:     '#00d4ff',
+    purple:   '#0056b3',
+    pink:     '#0056b3',
+    cyan:     '#00d4ff',
+    blue:     '#0056b3',
     muted:    '#94a3b8',
   };
 
   const PALETTE = [
-    COLORS.primary, COLORS.success, COLORS.warning,
-    COLORS.danger,  COLORS.info,    COLORS.purple,
+    COLORS.primary, COLORS.cyan, COLORS.pink,
+    COLORS.success, COLORS.warning, COLORS.blue,
   ];
 
   const ANIMATION = { duration: 900, easing: 'easeInOutQuart' };
 
   const BASE_SCALES = {
-    x: { grid: { display: false } },
-    y: { grid: { color: 'rgba(0,0,0,.05)', drawBorder: false } },
+    x: { grid: { display: false }, ticks: { color: '#94a3b8' } },
+    y: { grid: { color: 'rgba(255,255,255,.06)', drawBorder: false }, ticks: { color: '#94a3b8' } },
   };
 
   /* ---- Gradient fill helper ---- */
@@ -79,8 +82,8 @@ const Charts = (() => {
         animation: ANIMATION,
         interaction: { mode: 'index', intersect: false },
         plugins: {
-          legend: { position: 'bottom', labels: { usePointStyle: true, padding: 16 } },
-          tooltip: { cornerRadius: 8, padding: 10 },
+          legend: { position: 'bottom', labels: { usePointStyle: true, padding: 16, color: '#94a3b8' } },
+          tooltip: { cornerRadius: 8, padding: 10, backgroundColor: 'rgba(20,26,38,.95)', titleColor: '#ffffff', bodyColor: '#ffffff', borderColor: '#2d3748', borderWidth: 1 },
         },
         scales: BASE_SCALES,
         ...opts,
@@ -98,8 +101,8 @@ const Charts = (() => {
         datasets: [{
           data,
           backgroundColor: colors || [COLORS.success, COLORS.warning, COLORS.danger],
-          borderWidth: 3,
-          borderColor: '#fff',
+          borderWidth: 2,
+          borderColor: 'rgba(20,26,38,.7)',
           hoverOffset: 10,
         }],
       },
@@ -108,8 +111,8 @@ const Charts = (() => {
         maintainAspectRatio: false,
         animation: { ...ANIMATION, animateRotate: true, animateScale: true },
         plugins: {
-          legend: { position: 'bottom', labels: { usePointStyle: true, padding: 14 } },
-          tooltip: { cornerRadius: 8, padding: 10 },
+          legend: { position: 'bottom', labels: { usePointStyle: true, padding: 14, color: '#94a3b8' } },
+          tooltip: { cornerRadius: 8, padding: 10, backgroundColor: 'rgba(20,26,38,.95)', titleColor: '#ffffff', bodyColor: '#ffffff', borderColor: '#2d3748', borderWidth: 1 },
         },
         cutout: '68%',
       },
@@ -137,7 +140,7 @@ const Charts = (() => {
         responsive: true,
         maintainAspectRatio: false,
         animation: ANIMATION,
-        plugins: { legend: { display: !!label } },
+        plugins: { legend: { display: !!label, labels: { color: '#94a3b8' } }, tooltip: { cornerRadius: 8, padding: 10, backgroundColor: 'rgba(20,26,38,.95)', titleColor: '#ffffff', bodyColor: '#ffffff', borderColor: '#2d3748', borderWidth: 1 } },
         scales: BASE_SCALES,
       },
     });

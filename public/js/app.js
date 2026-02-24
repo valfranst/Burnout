@@ -50,7 +50,7 @@ const App = (() => {
   /** Gera URL de avatar placeholder a partir das iniciais */
   function defaultAvatar(name) {
     const initials = (name || '?').split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase();
-    const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="80" height="80"><rect width="80" height="80" rx="40" fill="%236366f1"/><text x="50%" y="54%" dominant-baseline="middle" text-anchor="middle" fill="white" font-size="32" font-family="sans-serif">${initials}</text></svg>`;
+    const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="80" height="80"><rect width="80" height="80" rx="40" fill="%2300d4ff"/><text x="50%" y="54%" dominant-baseline="middle" text-anchor="middle" fill="white" font-size="32" font-family="sans-serif">${initials}</text></svg>`;
     return `data:image/svg+xml,${svg}`;
   }
 

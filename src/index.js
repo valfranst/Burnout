@@ -26,6 +26,10 @@ const PORT = process.env.PORT || 3000;
 app.set('views', path.join(__dirname, 'views'));
 app.set('view engine', 'ejs');
 
+// Definições globais da aplicação (único lugar)
+app.locals.appName = 'Burnout';
+app.locals.favicon = '/favicon-512x512.png';
+
 // ------------------------------------------------------------
 // Rate Limiters
 // ------------------------------------------------------------
@@ -56,7 +60,7 @@ app.use(cookieParser());
 app.use(
   session({
     store: new pgSession({
-      pool,
+      pool: pool.unthrottledPool,
       tableName: 'session',
       createTableIfMissing: true,
     }),
@@ -124,6 +128,15 @@ app.post('/auth/register', authLimiter, doubleCsrfProtection, async (req, res) =
   if (!email || !password) {
     return res.status(400).json({ error: 'E-mail e senha são obrigatórios.' });
   }
+  if (password.length < 8) {
+    return res.status(400).json({ error: 'A senha deve ter no mínimo 8 caracteres.' });
+  }
+  if (!/[a-zA-Z]/.test(password)) {
+    return res.status(400).json({ error: 'A senha deve conter pelo menos 1 letra.' });
+  }
+  if (!/[0-9]/.test(password)) {
+    return res.status(400).json({ error: 'A senha deve conter pelo menos 1 número.' });
+  }
   try {
     const hash = await bcrypt.hash(password, 12);
     const result = await pool.query(
@@ -172,43 +185,43 @@ app.get('/auth/me', (req, res) => {
 // ------------------------------------------------------------
 // Application Routes (pages)
 app.get(['/', '/index.html'], (req, res) => res.render('layout', {
-  title: 'Burnout Analysis System',
+  title: 'Início',
   user: req.user || null,
   body: 'index',
 }));
 
 app.get(['/metricas_pessoais', '/metricas_pessoais.html', '/log', '/log.html'], (req, res) => res.render('layout', {
-  title: 'Novo Registro — Burnout Analysis',
+  title: 'Novo Registro',
   user: req.user || null,
   body: 'metricas_pessoais',
 }));
 
 app.get(['/dashboard.html'], (req, res) => res.render('layout', {
-  title: 'Dashboard — Burnout Analysis',
+  title: 'Dashboard',
   user: req.user || null,
   body: 'dashboard',
 }));
 
 app.get(['/report.html'], (req, res) => res.render('layout', {
-  title: 'Relatório Público — Burnout Analysis',
+  title: 'Relatório Público',
   user: req.user || null,
   body: 'report',
 }));
 
 app.get(['/treinamento', '/treinamento.html'], (req, res) => res.render('layout', {
-  title: 'Treinamento de Modelo — Burnout Analysis',
+  title: 'Treinamento de Modelo',
   user: req.user || null,
   body: 'treinamento',
 }));
 
 app.get(['/login', '/login.html'], (_req, res) => res.render('layout', {
-  title: 'Login — Burnout Analysis',
+  title: 'Login',
   user: null,
   body: 'login',
 }));
 
 app.get(['/register', '/register.html'], (_req, res) => res.render('layout', {
-  title: 'Cadastro — Burnout Analysis',
+  title: 'Cadastro',
   user: null,
   body: 'register',
 }));

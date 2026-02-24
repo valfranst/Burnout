@@ -12,6 +12,7 @@ DROP TABLE IF EXISTS burnout CASCADE;
 CREATE TABLE burnout (
     id SERIAL PRIMARY KEY,
     user_id INT,
+    log_id INT,
     day_type TEXT,
     work_hours REAL,
     screen_time_hours REAL,
@@ -25,28 +26,45 @@ CREATE TABLE burnout (
     fatigue_score REAL,
     burnout_score REAL,
     burnout_risk burnout_risk_level,
+    archetype TEXT,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    embedding vector(12)
+    embedding vector(11)
 
 );
 
--- Função da Trigger quando inserir ou atualizar um registro, para calcular o embedding quando for null
+-- Função da Trigger: gera embedding normalizado (Min-Max) com 11 features
+-- Limites: FEATURE_MINS = [0, 0.5, 0, 0, 0, 0, 0, 2, 3, 0, 0]
+--          FEATURE_MAXS = [1, 18, 18, 16, 20, 1, 10, 10, 9, 100, 10]
+-- Ordem: [day_type_bin, work_hours, screen_time_hours, meetings_count,
+--         breaks_taken, after_hours_work_bin, app_switches, sleep_hours,
+--         isolation_index, task_completion, fatigue_score]
+-- Nota: burnout_score NÃO é incluído no embedding (é o alvo da predição)
 CREATE OR REPLACE FUNCTION fn_generate_burnout_embedding()
 RETURNS TRIGGER AS $$
 BEGIN
     NEW.embedding := ARRAY[
-        CASE WHEN NEW.day_type = 'Weekday' THEN 1 ELSE 0 END,
-        NEW.work_hours,
-        NEW.screen_time_hours,
-        NEW.meetings_count,
-        NEW.breaks_taken,
-        CASE WHEN NEW.after_hours_work THEN 1 ELSE 0 END,
-        NEW.app_switches,
-        NEW.sleep_hours,
-        NEW.task_completion,
-        NEW.isolation_index,
-        NEW.fatigue_score,
-        NEW.burnout_score
+        -- day_type_bin: min=0, max=1, range=1
+        (CASE WHEN NEW.day_type = 'Weekday' THEN 1.0 ELSE 0.0 END),
+        -- work_hours: min=0.5, max=18, range=17.5
+        LEAST(1.0, GREATEST(0.0, (NEW.work_hours - 0.5) / 17.5)),
+        -- screen_time_hours: min=0, max=18, range=18
+        LEAST(1.0, GREATEST(0.0, NEW.screen_time_hours / 18.0)),
+        -- meetings_count: min=0, max=16, range=16
+        LEAST(1.0, GREATEST(0.0, NEW.meetings_count / 16.0)),
+        -- breaks_taken: min=0, max=20, range=20
+        LEAST(1.0, GREATEST(0.0, NEW.breaks_taken / 20.0)),
+        -- after_hours_work_bin: min=0, max=1, range=1
+        (CASE WHEN NEW.after_hours_work THEN 1.0 ELSE 0.0 END),
+        -- app_switches: min=0, max=10, range=10 (nota: já é isolation_index scale)
+        LEAST(1.0, GREATEST(0.0, NEW.app_switches / 10.0)),
+        -- sleep_hours: min=2, max=10, range=8
+        LEAST(1.0, GREATEST(0.0, (NEW.sleep_hours - 2.0) / 8.0)),
+        -- isolation_index: min=3, max=9, range=6 (nota: escala original)
+        LEAST(1.0, GREATEST(0.0, (NEW.isolation_index - 3.0) / 6.0)),
+        -- task_completion: min=0, max=100, range=100
+        LEAST(1.0, GREATEST(0.0, COALESCE(NEW.task_completion, 80.0) / 100.0)),
+        -- fatigue_score: min=0, max=10, range=10
+        LEAST(1.0, GREATEST(0.0, NEW.fatigue_score / 10.0))
     ]::real[];
     RETURN NEW;
 END;

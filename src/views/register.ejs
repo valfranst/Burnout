@@ -27,8 +27,13 @@
       </div>
       <div class="form-group">
         <label for="password">Senha</label>
-        <input type="password" id="password" name="password" required minlength="6" placeholder="Mínimo 6 caracteres">
-        <small class="text-muted" style="font-size:.75rem;">Mínimo de 6 caracteres; use letras e números para fortalecer o acesso.</small>
+        <input type="password" id="password" name="password" required minlength="8" placeholder="Mínimo 8 caracteres">
+        <small class="text-muted" style="font-size:.75rem;">Mínimo de 8 caracteres, com pelo menos 1 letra e 1 número.</small>
+      </div>
+      <div class="form-group">
+        <label for="confirmPassword">Confirmar senha</label>
+        <input type="password" id="confirmPassword" name="confirmPassword" required minlength="8" placeholder="Repita a senha">
+        <small class="text-muted" style="font-size:.75rem;">Digite a mesma senha para confirmar.</small>
       </div>
       <button type="submit" class="btn btn-primary" style="width:100%; justify-content:center;">Criar conta</button>
     </form>
@@ -48,6 +53,7 @@
     const nameValue = form.name.value.trim();
     const emailValue = form.email.value.trim();
     const passwordValue = form.password.value;
+    const confirmPasswordValue = form.confirmPassword.value;
 
     if (nameValue.length < 2) {
       App.showAlert(box, 'Informe um nome válido com ao menos 2 caracteres.');
@@ -57,8 +63,20 @@
       App.showAlert(box, 'Informe um e-mail válido com domínio e aroba.');
       return;
     }
-    if (passwordValue.length < 6) {
-      App.showAlert(box, 'A senha deve ter no mínimo 6 caracteres.');
+    if (passwordValue.length < 8) {
+      App.showAlert(box, 'A senha deve ter no mínimo 8 caracteres.');
+      return;
+    }
+    if (!/[a-zA-Z]/.test(passwordValue)) {
+      App.showAlert(box, 'A senha deve conter pelo menos 1 letra.');
+      return;
+    }
+    if (!/[0-9]/.test(passwordValue)) {
+      App.showAlert(box, 'A senha deve conter pelo menos 1 número.');
+      return;
+    }
+    if (passwordValue !== confirmPasswordValue) {
+      App.showAlert(box, 'As senhas não coincidem.');
       return;
     }
     try {
