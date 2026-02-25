@@ -1,0 +1,46 @@
+# Build
+cd /home/teanslab/projetos/recomendacao_burnout
+docker build -t valfranleao/burnout_app_0.4:latest -f Dockerfile .
+
+# Push
+docker push valfranleao/burnout_app_0.4:latest
+
+
+# Na VPS
+docker pull valfranleao/burnout_app_0.4:latest
+
+
+
+**************** DEPLOY *******************************
+--Copiar para o servidor:
+scp deploy-vps.sh deploy@72.61.222.60:~
+
+-- Rodar no servidor:
+ssh deploy@72.61.222.60
+./deploy-vps.sh
+
+
+
+
+
+
+************ BACKUP RESTORE ***************************
+scp db-backup-restore.sh deploy@72.61.222.60:~
+
+# 1. Fazer backup ANTES (se o container ainda estiver rodando)
+./db-backup-restore.sh backup
+
+# 2. Derrubar tudo
+cd /opt/burnout && docker compose down
+
+# 3. Remover volume corrompido (se necessário)
+docker volume rm burnout_postgres_data
+
+# 4. Subir novamente (recria o volume limpo)
+docker compose up -d
+
+# 5. Aguardar o Postgres ficar healthy (~15s)
+docker compose ps
+
+# 6. Restaurar o backup
+./db-backup-restore.sh restore eng_ia_aplicada_20260225_143000.sql.gz

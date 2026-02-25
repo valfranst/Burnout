@@ -43,48 +43,57 @@ passport.deserializeUser(async (id, done) => {
   }
 });
 
-// Google OAuth2
-passport.use(
-  new GoogleStrategy(
-    {
-      clientID: process.env.GOOGLE_CLIENT_ID,
-      clientSecret: process.env.GOOGLE_CLIENT_SECRET,
-      callbackURL: process.env.GOOGLE_CALLBACK_URL,
-    },
-    async (_accessToken, _refreshToken, profile, done) => {
-      try {
-        const email = profile.emails[0].value;
-        const existing = await pool.query('SELECT * FROM users WHERE google_id = $1', [profile.id]);
+// Google OAuth2 — só registra se as credenciais estiverem definidas
+const googleEnabled =
+  process.env.GOOGLE_CLIENT_ID &&
+  process.env.GOOGLE_CLIENT_SECRET &&
+  process.env.GOOGLE_CALLBACK_URL;
 
-        if (existing.rows.length > 0) {
-          const newPicture = profile.photos[0]?.value || null;
-          await pool.query(
-            'UPDATE users SET last_login = NOW(), picture_url = COALESCE($2, picture_url) WHERE id = $1',
-            [existing.rows[0].id, newPicture]
+if (googleEnabled) {
+  passport.use(
+    new GoogleStrategy(
+      {
+        clientID: process.env.GOOGLE_CLIENT_ID,
+        clientSecret: process.env.GOOGLE_CLIENT_SECRET,
+        callbackURL: process.env.GOOGLE_CALLBACK_URL,
+      },
+      async (_accessToken, _refreshToken, profile, done) => {
+        try {
+          const email = profile.emails[0].value;
+          const existing = await pool.query('SELECT * FROM users WHERE google_id = $1', [profile.id]);
+
+          if (existing.rows.length > 0) {
+            const newPicture = profile.photos[0]?.value || null;
+            await pool.query(
+              'UPDATE users SET last_login = NOW(), picture_url = COALESCE($2, picture_url) WHERE id = $1',
+              [existing.rows[0].id, newPicture]
+            );
+            _invalidateUserCache(existing.rows[0].id);
+            // Retorna o usuário com a foto atualizada
+            const refreshed = await pool.query('SELECT * FROM users WHERE id = $1', [existing.rows[0].id]);
+            return done(null, refreshed.rows[0]);
+          }
+
+          const result = await pool.query(
+            `INSERT INTO users (google_id, email, name, picture_url, email_verified, last_login)
+             VALUES ($1, $2, $3, $4, TRUE, NOW())
+             ON CONFLICT (email) DO UPDATE
+               SET google_id = EXCLUDED.google_id,
+                   picture_url = EXCLUDED.picture_url,
+                   last_login = NOW()
+             RETURNING *`,
+            [profile.id, email, profile.displayName, profile.photos[0]?.value || null]
           );
-          _invalidateUserCache(existing.rows[0].id);
-          // Retorna o usuário com a foto atualizada
-          const refreshed = await pool.query('SELECT * FROM users WHERE id = $1', [existing.rows[0].id]);
-          return done(null, refreshed.rows[0]);
+          return done(null, result.rows[0]);
+        } catch (err) {
+          return done(err);
         }
-
-        const result = await pool.query(
-          `INSERT INTO users (google_id, email, name, picture_url, email_verified, last_login)
-           VALUES ($1, $2, $3, $4, TRUE, NOW())
-           ON CONFLICT (email) DO UPDATE
-             SET google_id = EXCLUDED.google_id,
-                 picture_url = EXCLUDED.picture_url,
-                 last_login = NOW()
-           RETURNING *`,
-          [profile.id, email, profile.displayName, profile.photos[0]?.value || null]
-        );
-        return done(null, result.rows[0]);
-      } catch (err) {
-        return done(err);
       }
-    }
-  )
-);
+    )
+  );
+} else {
+  console.warn('[auth] Google OAuth desabilitado: GOOGLE_CLIENT_ID / SECRET / CALLBACK_URL não definidos.');
+}
 
 // Email + Senha
 passport.use(
@@ -108,4 +117,5 @@ passport.use(
   })
 );
 
+passport.googleEnabled = googleEnabled;
 module.exports = passport;

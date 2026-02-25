@@ -4,7 +4,7 @@ const { Pool } = require('pg');
 
 const pool = new Pool({
   connectionString: process.env.DATABASE_URL,
-  ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false,
+  ssl: process.env.DATABASE_SSL === 'true' ? { rejectUnauthorized: false } : false,
 });
 
 pool.on('error', (err) => {
@@ -107,7 +107,7 @@ pool.connect = function rateLimitedConnect(cb) {
 // Pool sem rate-limit para uso interno (ex.: session store)
 const _unthrottledPool = new Pool({
   connectionString: process.env.DATABASE_URL,
-  ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false,
+  ssl: process.env.DATABASE_SSL === 'true' ? { rejectUnauthorized: false } : false,
 });
 
 _unthrottledPool.on('error', (err) => {

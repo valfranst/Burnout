@@ -22,6 +22,9 @@ const treinamentoRouter = require('./routes/treinamento');
 const app = express();
 const PORT = process.env.PORT || 3000;
 
+// Confiar no primeiro proxy (Docker / Nginx / Cloudflare)
+app.set('trust proxy', 1);
+
 // View engine (EJS)
 app.set('views', path.join(__dirname, 'views'));
 app.set('view engine', 'ejs');
@@ -92,10 +95,11 @@ const isProduction = process.env.NODE_ENV === 'production';
 const { generateCsrfToken, doubleCsrfProtection } = doubleCsrf({
   getSecret: () => process.env.SESSION_SECRET || 'dev-secret-change-me',
   getSessionIdentifier: (req) => req.session?.id || '',
-  cookieName: isProduction ? '__Host-psifi.x-csrf-token' : 'x-csrf-token',
+  cookieName: 'x-csrf-token',
   cookieOptions: {
     secure: isProduction,
     sameSite: 'lax',
+    path: '/',
   },
   errorConfig: {
     statusCode: 403,
@@ -112,15 +116,17 @@ app.get('/csrf-token', (req, res) => {
 // Auth Routes
 // ------------------------------------------------------------
 
-// Google OAuth2
-app.get('/auth/google', authLimiter, passport.authenticate('google', { scope: ['profile', 'email'] }));
+// Google OAuth2 — só registra rotas se o provider estiver habilitado
+if (passport.googleEnabled) {
+  app.get('/auth/google', authLimiter, passport.authenticate('google', { scope: ['profile', 'email'] }));
 
-app.get(
-  '/auth/google/callback',
-  authLimiter,
-  passport.authenticate('google', { failureRedirect: '/login.html' }),
-  (_req, res) => res.redirect('/dashboard.html')
-);
+  app.get(
+    '/auth/google/callback',
+    authLimiter,
+    passport.authenticate('google', { failureRedirect: '/login.html' }),
+    (_req, res) => res.redirect('/dashboard.html')
+  );
+}
 
 // Email + Senha — Cadastro
 app.post('/auth/register', authLimiter, doubleCsrfProtection, async (req, res) => {
@@ -241,10 +247,19 @@ app.use(express.static(path.join(__dirname, '..', 'public')));
 app.get('/health', (_req, res) => res.json({ status: 'ok', timestamp: new Date().toISOString() }));
 
 // ------------------------------------------------------------
-// Start server
+// Start server (garante schema do banco antes de aceitar conexões)
 // ------------------------------------------------------------
-app.listen(PORT, () => {
-  console.log(`Burnout API rodando na porta ${PORT} [${process.env.NODE_ENV || 'development'}]`);
-});
+const dbBootstrap = require('./dbBootstrap');
+
+dbBootstrap()
+  .then(() => {
+    app.listen(PORT, () => {
+      console.log(`Burnout API rodando na porta ${PORT} [${process.env.NODE_ENV || 'development'}]`);
+    });
+  })
+  .catch((err) => {
+    console.error('Falha ao inicializar o banco. Abortando.', err);
+    process.exit(1);
+  });
 
 module.exports = app;

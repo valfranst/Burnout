@@ -3,6 +3,9 @@
   "version": "1.0.0",
   "description": "Burnout no trabalho remoto - análise comportamental com IA",
   "main": "src/index.js",
+  "engines": {
+    "node": ">=22.0.0"
+  },
   "scripts": {
     "start": "node src/index.js",
     "dev": "nodemon src/index.js"
