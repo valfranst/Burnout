@@ -43,6 +43,7 @@ services:
         condition: service_healthy
     environment:
       - NODE_ENV=production
+      - TF_ENABLE_ONEDNN_OPTS=0
       - PORT=${PORT:-3000}
       - DATABASE_URL=postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres-vector:5432/${POSTGRES_DB}
       - DATABASE_SSL=false
@@ -52,14 +53,16 @@ services:
       - GOOGLE_CALLBACK_URL=${GOOGLE_CALLBACK_URL}
     ports:
       - "127.0.0.1:${PORT:-3000}:${PORT:-3000}"
+    volumes:
+      - model_cache:/app/.model_cache
     networks:
       - backend
     deploy:
       resources:
         limits:
-          memory: 512M
+          memory: 1024M
         reservations:
-          memory: 256M
+          memory: 512M
     logging:
       driver: json-file
       options:
@@ -68,6 +71,8 @@ services:
 
 volumes:
   pgdata:
+    driver: local
+  model_cache:
     driver: local
 
 networks:

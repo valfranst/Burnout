@@ -51,6 +51,7 @@ services:
     container_name: burnout-app
     environment:
       NODE_ENV: production
+      TF_ENABLE_ONEDNN_OPTS: "0"
       PORT: 3000
       DATABASE_URL: postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgresql:5432/${POSTGRES_DB}
       POSTGRES_USER: ${POSTGRES_USER}
@@ -67,6 +68,8 @@ services:
     depends_on:
       postgresql:
         condition: service_healthy
+    volumes:
+      - model_cache:/app/.model_cache
     networks:
       - backend
 
@@ -75,22 +78,34 @@ networks:
 
 volumes:
   postgres_data:
+  model_cache:
 EOF
 
 # ─── .env ────────────────────────────────────────────────────────────────────
-echo "==> Gerando ${ENV_FILE}..."
-cat > "${ENV_FILE}" <<'EOF'
-POSTGRES_DB=your_database_name
-POSTGRES_USER=your_db_user
-POSTGRES_PASSWORD=your_db_password
-DATABASE_URL=postgres://your_db_user:your_db_password@postgresql:5432/your_database_name
-SESSION_SECRET=generate_a_long_random_string_here
-GOOGLE_CLIENT_ID=your_google_client_id.apps.googleusercontent.com
-GOOGLE_CLIENT_SECRET=your_google_client_secret
-GOOGLE_CALLBACK_URL=https://your_domain/auth/google/callback
-EOF
+if [ -f "${ENV_FILE}" ]; then
+  echo "==> ${ENV_FILE} já existe — mantendo credenciais atuais."
+  echo "    Para recriar, remova o arquivo manualmente e rode o script novamente."
+else
+  echo "==> Gerando ${ENV_FILE} com credenciais seguras..."
+  DB_PASS="$(openssl rand -base64 32 | tr -dc 'A-Za-z0-9' | head -c 24)"
+  SESSION_SEC="$(openssl rand -hex 32)"
+  cat > "${ENV_FILE}" <<ENVEOF
+POSTGRES_DB=eng_ia_aplicada
+POSTGRES_USER=burnout_user
+POSTGRES_PASSWORD=${DB_PASS}
+DATABASE_URL=postgres://burnout_user:${DB_PASS}@postgresql:5432/eng_ia_aplicada
+SESSION_SECRET=${SESSION_SEC}
+GOOGLE_CLIENT_ID=
+GOOGLE_CLIENT_SECRET=
+GOOGLE_CALLBACK_URL=
+ENVEOF
 
-chmod 600 "${ENV_FILE}"
+  chmod 600 "${ENV_FILE}"
+  echo ""
+  echo "  ⚠  IMPORTANTE: Edite ${ENV_FILE} e preencha as variáveis do Google OAuth."
+  echo "     Depois rode este script novamente para aplicar."
+  echo ""
+fi
 
 # ─── Deploy ──────────────────────────────────────────────────────────────────
 cd "${APP_DIR}"

@@ -15,12 +15,41 @@
 let tf;
 try {
   tf = require('@tensorflow/tfjs-node');
+  console.log('[TF] Backend nativo (tfjs-node) carregado com sucesso.');
 } catch (_e) {
   tf = require('@tensorflow/tfjs');
+  console.warn('[TF] AVISO: Backend nativo indisponível — usando tfjs CPU puro (menor precisão).', _e.message);
 }
 
 const path = require('path');
 const fs = require('fs');
+
+/**
+ * PRNG determinístico (Mulberry32) para reprodutibilidade entre ambientes.
+ * Recebe uma seed inteira e retorna uma função que gera floats em [0, 1).
+ */
+function mulberry32(seed) {
+  return function () {
+    seed |= 0; seed = (seed + 0x6D2B79F5) | 0;
+    let t = Math.imul(seed ^ (seed >>> 15), 1 | seed);
+    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
+}
+
+/**
+ * Fisher-Yates shuffle determinístico.
+ * Garante distribuição uniforme independente da engine JS.
+ */
+function seededShuffle(arr, seed) {
+  const rng = mulberry32(seed);
+  const a = [...arr];
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(rng() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+}
 
 // Diretório para persistência do modelo e contexto
 const MODEL_DIR = path.join(__dirname, '..', '.model_cache');
@@ -446,8 +475,8 @@ async function trainModel(records, options = {}) {
   // 1. Contexto dinâmico (min/max reais de cada feature)
   const context = makeContextFromRecords(records);
 
-  // 2. Embaralha e divide 80/20 treino/validação
-  const shuffled = [...records].sort(() => Math.random() - 0.5);
+  // 2. Embaralha (Fisher-Yates com seed fixa) e divide 80/20 treino/validação
+  const shuffled = seededShuffle(records, 42);
   const splitIdx = Math.max(1, Math.floor(shuffled.length * 0.8));
   const trainRecords = shuffled.slice(0, splitIdx);
   const valRecords = shuffled.slice(splitIdx);

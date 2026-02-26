@@ -24,10 +24,12 @@ RUN npm prune --production
 # ESTÁGIO 2: Runtime (imagem final mínima)
 FROM node:22-slim
 
-# Instala tini para tratamento correto de sinais (PID 1) e curl para healthcheck
+# Instala tini, curl e bibliotecas nativas necessárias para @tensorflow/tfjs-node
 RUN apt-get update && apt-get install -y --no-install-recommends \
     tini \
     curl \
+    libstdc++6 \
+    libc6 \
     && rm -rf /var/lib/apt/lists/*
 
 # Cria usuário não-root para segurança
@@ -40,6 +42,9 @@ COPY --from=builder --chown=appuser:appuser /app/node_modules ./node_modules
 COPY --from=builder --chown=appuser:appuser /app/package.json ./package.json
 COPY --from=builder --chown=appuser:appuser /app/src ./src
 COPY --from=builder --chown=appuser:appuser /app/public ./public
+
+# Cria diretório de cache do modelo com permissão para o app user
+RUN mkdir -p /app/.model_cache && chown appuser:appuser /app/.model_cache
 
 # Roda como usuário não-root
 USER appuser
