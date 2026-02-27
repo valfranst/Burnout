@@ -1,0 +1,6 @@
+@BurnoutAnalysis.Api_HostAddress = http://localhost:5238
+
+GET {{BurnoutAnalysis.Api_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###
