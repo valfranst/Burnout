@@ -1,0 +1,15 @@
+{
+  "/api": {
+    "target": "https://localhost:5001",
+    "secure": false,
+    "changeOrigin": true,
+    "pathRewrite": {
+      "^/api": ""
+    }
+  },
+  "/model": {
+    "target": "https://localhost:5001",
+    "secure": false,
+    "changeOrigin": true
+  }
+}

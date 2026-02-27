@@ -1,0 +1,8 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/BurnoutAnalysis.Api/BurnoutAnalysis.Api.csproj" />
+    <Project Path="src/BurnoutAnalysis.Application/BurnoutAnalysis.Application.csproj" />
+    <Project Path="src/BurnoutAnalysis.Domain/BurnoutAnalysis.Domain.csproj" />
+    <Project Path="src/BurnoutAnalysis.Infrastructure/BurnoutAnalysis.Infrastructure.csproj" />
+  </Folder>
+</Solution>

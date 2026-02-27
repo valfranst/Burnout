@@ -1,0 +1,13 @@
+/* You can add global styles to this file, and also import other style files */
+
+html, body { height: 100%; }
+body { margin: 0; font-family: Roboto, "Helvetica Neue", sans-serif; background: #f5f5f5; }
+
+/* Utility classes */
+.full-width { width: 100%; }
+.text-center { text-align: center; }
+.text-muted { color: rgba(0,0,0,0.54); }
+
+/* Material overrides */
+mat-card { border-radius: 12px !important; }
+

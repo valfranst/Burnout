@@ -15,3 +15,14 @@ __pycache__/
 .env.development.local
 .env.test.local
 .env.production.local
+
+# .NET build artifacts
+backend/**/bin/
+backend/**/obj/
+backend/**/*.user
+backend/.vs/
+
+# Angular build artifacts
+frontend/dist/
+frontend/.angular/
+
